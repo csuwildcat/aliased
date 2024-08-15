@@ -30,7 +30,7 @@ export class Web5App extends UseStates(LitElement) {
     return html`
 
       <header id="header">
-        <sl-icon name="search-square"></sl-icon>
+        <sl-icon id="logo_icon" name="search-square"></sl-icon>
         <h1>WhoDID</h1>
         ${
           this?.state?.connected ?
@@ -102,6 +102,11 @@ export class Web5App extends UseStates(LitElement) {
         background: var(--wa-color-blue-50);
         box-shadow: 0 0 2px 2px rgba(0 0 0 / 35%);
         z-index: 1;
+      }
+
+      #logo_icon {
+        margin: 0 0.25rem 0 0;
+        font-size: 2rem;
       }
 
       #header h1 {
