@@ -26,7 +26,6 @@ registerRoute(new NavigationRoute(
 self.skipWaiting()
 clientsClaim()
 
-
 activatePolyfills({
   onCacheCheck(event, route){
     return {
@@ -34,3 +33,4 @@ activatePolyfills({
     }
   }
 });
+

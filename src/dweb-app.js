@@ -4,11 +4,10 @@ import appLogo from '/favicon.svg'
 import './pwa-badge'
 
 import './components/shoelace';
-import './components/web-awesome';
 
 import { UseStates } from './utils/state';
 
-export class Web5App extends UseStates(LitElement) {
+export class DWebApp extends UseStates(LitElement) {
 
   static properties = {
     docsHint: { type: String },
@@ -36,43 +35,43 @@ export class Web5App extends UseStates(LitElement) {
           this?.state?.connected ?
             html`
               <a href="/profiles/${this?.state?.did}">
-                <wa-avatar id="header_avatar" image="${this.state?.avatar?.cache?.uri}" label="User avatar"></wa-avatar>
+                <sl-avatar id="header_avatar" image="${this.state?.avatar?.cache?.uri}" label="User avatar"></sl-avatar>
               </a>
             ` :
             html`
-              <wa-button size="small" @click="${ e => this.connectModal.show() }">
-                <wa-icon slot="prefix" name="arrow-right-to-bracket"></wa-icon>
+              <sl-button size="small" @click="${ e => this.connectModal.show() }">
+                <sl-icon slot="prefix" name="arrow-right-to-bracket"></sl-icon>
                 Connect
-              </wa-button>
+              </sl-button>
             `
         }
       </header>
 
-      <wa-tab-group id="pages" placement="start">
-        <wa-tab slot="nav" panel="general">Find</wa-tab>
-        <wa-tab slot="nav" panel="custom">Profile</wa-tab>
+      <sl-tab-group id="pages" placement="start">
+        <sl-tab slot="nav" panel="general">Find</sl-tab>
+        <sl-tab slot="nav" panel="custom">Profile</sl-tab>
 
-        <wa-tab-panel name="general">This is the general tab panel.</wa-tab-panel>
-        <wa-tab-panel name="custom" style="height: 200vh">This is the custom tab panel.</wa-tab-panel>
-      </wa-tab-group>
+        <sl-tab-panel name="general">This is the general tab panel.</sl-tab-panel>
+        <sl-tab-panel name="custom" style="height: 200vh">This is the custom tab panel.</sl-tab-panel>
+      </sl-tab-group>
 
       <sl-dialog id="connect_modal" label="Connect" placement="start">
         <section flex="column center-x center-y">
-          <wa-button variant="default" size="large" @click="${ async e => {
+          <sl-button variant="default" size="large" @click="${ async e => {
             e.target.loading = true;
             const did = await this.loadProfile();
             e.target.loading = false;
             router.navigateTo(`/profiles/${did}`);
             this.connectModal.hide();
           }}">
-            <wa-icon slot="prefix" name="user-plus"></wa-icon>
+            <sl-icon slot="prefix" name="user-plus"></sl-icon>
             Create a new identity
-          </wa-button>
+          </sl-button>
           <div break-text="OR"></div>
-          <wa-button variant="default" size="large" @click="${ e => this.remoteConnect() }">
-            <wa-icon slot="prefix" name="at"></wa-icon>
+          <sl-button variant="default" size="large" @click="${ e => this.remoteConnect() }">
+            <sl-icon slot="prefix" name="at"></sl-icon>
             Connect your identity
-          </wa-button>
+          </sl-button>
         </section>
       </sl-dialog>
 
@@ -99,7 +98,7 @@ export class Web5App extends UseStates(LitElement) {
         align-items: center;
         height: var(--header-height);
         padding: 0 0.5rem;
-        background: var(--wa-color-blue-50);
+        background: var(--sl-color-blue-50);
         box-shadow: 0 0 2px 2px rgba(0 0 0 / 35%);
         z-index: 1;
       }
@@ -114,7 +113,7 @@ export class Web5App extends UseStates(LitElement) {
         font-size: 1.65rem;
       }
 
-      #header wa-avatar {
+      #header sl-avatar {
         --size: calc(var(--header-height) - 1rem);
       }
 
@@ -164,4 +163,4 @@ export class Web5App extends UseStates(LitElement) {
   }
 }
 
-customElements.define('web5-app', Web5App)
+customElements.define('dweb-app', DWebApp)
