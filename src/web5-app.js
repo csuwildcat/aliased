@@ -3,27 +3,16 @@ import litLogo from './assets/lit.svg'
 import appLogo from '/favicon.svg'
 import './pwa-badge'
 
-import './components/web-awesome'
+import './components/shoelace';
+import './components/web-awesome';
 
-/**
- * An example element.
- *
- * @slot - This element has a slot
- * @csspart button - The button
- */
-export class Web5App extends LitElement {
-  static get properties() {
-    return {
-      /**
-       * Copy for the read the docs hint.
-       */
-      docsHint: { type: String },
+import { UseStates } from './utils/state';
 
-      /**
-       * The number of times the button has been clicked.
-       */
-      count: { type: Number },
-    }
+export class Web5App extends UseStates(LitElement) {
+
+  static properties = {
+    docsHint: { type: String },
+    count: { type: Number }
   }
 
   constructor() {
@@ -32,16 +21,33 @@ export class Web5App extends LitElement {
     this.count = 0
   }
 
-  firstUpdated(){
-    // discover(this.shadowRoot);
+  firstUpdated() {
+    this.connectModal = this.shadowRoot.querySelector('#connect_modal');
+    // console.log(this.connectModal);
   }
 
   render() {
     return html`
+
       <header id="header">
+        <sl-icon name="search-square"></sl-icon>
         <h1>WhoDID</h1>
-        <wa-avatar></wa-avatar>
+        ${
+          this?.state?.connected ?
+            html`
+              <a href="/profiles/${this?.state?.did}">
+                <wa-avatar id="header_avatar" image="${this.state?.avatar?.cache?.uri}" label="User avatar"></wa-avatar>
+              </a>
+            ` :
+            html`
+              <wa-button size="small" @click="${ e => this.connectModal.show() }">
+                <wa-icon slot="prefix" name="arrow-right-to-bracket"></wa-icon>
+                Connect
+              </wa-button>
+            `
+        }
       </header>
+
       <wa-tab-group id="pages" placement="start">
         <wa-tab slot="nav" panel="general">Find</wa-tab>
         <wa-tab slot="nav" panel="custom">Profile</wa-tab>
@@ -49,7 +55,29 @@ export class Web5App extends LitElement {
         <wa-tab-panel name="general">This is the general tab panel.</wa-tab-panel>
         <wa-tab-panel name="custom" style="height: 200vh">This is the custom tab panel.</wa-tab-panel>
       </wa-tab-group>
+
+      <sl-dialog id="connect_modal" label="Connect" placement="start">
+        <section flex="column center-x center-y">
+          <wa-button variant="default" size="large" @click="${ async e => {
+            e.target.loading = true;
+            const did = await this.loadProfile();
+            e.target.loading = false;
+            router.navigateTo(`/profiles/${did}`);
+            this.connectModal.hide();
+          }}">
+            <wa-icon slot="prefix" name="user-plus"></wa-icon>
+            Create a new identity
+          </wa-button>
+          <div break-text="OR"></div>
+          <wa-button variant="default" size="large" @click="${ e => this.remoteConnect() }">
+            <wa-icon slot="prefix" name="at"></wa-icon>
+            Connect your identity
+          </wa-button>
+        </section>
+      </sl-dialog>
+
       <pwa-badge></pwa-badge>
+
     `
   }
 
@@ -72,11 +100,13 @@ export class Web5App extends LitElement {
         height: var(--header-height);
         padding: 0 0.5rem;
         background: var(--wa-color-blue-50);
-        box-shadow: 0 0 2px 2px rgba(0 0 0 / 25%);
+        box-shadow: 0 0 2px 2px rgba(0 0 0 / 35%);
+        z-index: 1;
       }
 
       #header h1 {
         margin: 0 auto 0 0;
+        font-size: 1.65rem;
       }
 
       #header wa-avatar {
