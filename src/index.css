@@ -1,6 +1,6 @@
 :root {
 
-  --header-height: 3rem;
+  --body-bk: #262629;
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -8,7 +8,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background: var(--body-bk);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -16,19 +16,16 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-html.sl-scroll-lock, html.wa-scroll-lock {
-  scrollbar-gutter: auto !important;
-}
-
 html, body {
-  height: 100%;
   margin: 0;
 }
 
 body {
-  display: flex;
-  place-items: center;
   overflow-y: scroll;
+}
+
+html.sl-scroll-lock body {
+  overflow-y: unset;
 }
 
 @media (prefers-color-scheme: light) {

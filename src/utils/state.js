@@ -7,7 +7,6 @@ class AppChannel {
     this.sender = new BroadcastChannel(name);
     this.receiver = new BroadcastChannel(name);
     this.store = options.store || false;
-    this.data = null;
     this.receiver.addEventListener('message', (event) => {
       if (this.store) {
         this.data = event.data;
@@ -47,7 +46,6 @@ class PageChannel {
     this.name = name;
     this.listeners = new Set();
     this.store = options.store || false;
-    this.data = null;
   }
 
   publish(data) {
@@ -82,74 +80,37 @@ export const channels = {
   })
 };
 
-export const UseStates = (superClass) => class extends superClass {
-  static properties = {};
+export const Stateful = (superClass) => class extends superClass {
 
   constructor() {
     super();
 
-    // Automatically create reactive properties and connect them to channels
-    Object.entries(this.constructor.properties).forEach(([propName, options]) => {
-      if (options.channel) {
-        const { channelType, store } = options.channel;
-        const channelSource = channelType === 'app' ? channels.app : channels.page;
-        const channelName = propName.startsWith('$') ? propName : propName;
-        const channel = channelSource[channelName];
+    Object.entries(this.constructor.properties || {}).forEach(([prop, options]) => {
+      if (options.store) {
+        const channel = options.channel = (options.store === 'app' ? channels.app : channels.page)['$' + prop];
 
-        // Initialize the property with the channel's stored value if applicable
-        if (store && channel.data !== undefined) {
-          this[propName] = channel.data;
+        if (channel.data !== undefined) {
+          this[prop] = channel.data;
         }
 
-        // Override the reactive property setter
-        const originalSetter = Object.getOwnPropertyDescriptor(this.constructor.prototype, propName)?.set;
-        
-        Object.defineProperty(this, propName, {
-          get: () => channel.data,
-          set: (value) => {
-            if (channel.data !== value) {
-              channel.publish(value);
-              if (originalSetter) {
-                originalSetter.call(this, value);
-              } else {
-                this.requestUpdate(propName);
-              }
-            }
-          }
-        });
-
-        // Subscribe to channel updates
-        channel.subscribe((event) => {
-          if (event.data !== this[propName]) {
-            this[propName] = event.data;
+        channel.subscribe(event => {
+          if (event.data !== this[prop]) {
+            this[prop] = event.data;
           }
         });
       }
     });
   }
+
+  updated(props){
+    props.forEach((oldValue, prop) => {
+      const options = this.constructor?.properties?.[prop];
+      if (options && options.store && this[prop] !== options.channel.data) {
+        options.channel.publish(this[prop]);
+      }
+    });
+    if (super.updated) {
+      super.updated(props);
+    }
+  }
 };
-
-
-// export const UseStates = (superClass) => class extends superClass {
-//   static state = {};
-//   constructor() {
-//     super();
-//     this.state = {};
-//     this.constructor?.state?.app?.forEach(prop => {
-//       const channel = channels.app[prop];
-//       Object.defineProperty(this.state.app, prop, {
-//         get: () => channel.data,
-//         set: value => channel.publish(value)
-//       });
-//       channel.subscribe(() => this.requestUpdate(`state.app.${prop}`));
-//     })
-//     this.constructor?.state?.page?.forEach(prop => {
-//       const channel = channels.page[prop];
-//       Object.defineProperty(this.state.page, prop, {
-//         get: () => channel.data,
-//         set: value => channel.publish(value)
-//       });
-//       channel.subscribe(() => this.requestUpdate(`state.page.${prop}`));
-//     })
-//   }
-// };
