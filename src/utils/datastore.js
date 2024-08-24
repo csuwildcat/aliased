@@ -21,9 +21,9 @@ class Datastore {
     return Datastore.cache?.[did]?.[key];
   }
 
-  constructor(options){
+  constructor(web5, options){
     this.options = options;
-    this.did = options.did;
+    this.did = options.web5.connectedDid;
     this.dwn = options.web5.dwn;
     this.ready = this.installProtocols();
   }
@@ -329,7 +329,7 @@ class Datastore {
   }
 
   async deleteStory(recordId) {
-    const response = await web5.dwn.records.delete({
+    const response = await this.dwn.records.delete({
       message: { recordId },
     });
     if (response.status > 399) throw 'Delete failed';

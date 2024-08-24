@@ -4,9 +4,9 @@ import './shoelace';
 import PageStyles from '../styles/page.js';
 
 import { DWeb } from '../utils/dweb';
-import { Stateful } from '../utils/state';
+import { State } from '../components/mixins';
 
-export class ConnectWidget extends Stateful(LitElement) {
+export class ConnectWidget extends State(LitElement) {
 
   static properties = {
     identity: { store: 'app' },
@@ -27,7 +27,7 @@ export class ConnectWidget extends Stateful(LitElement) {
           e.target.loading = true;
           const identity = await DWeb.identity.create({ dwnEndpoints: ['http://localhost:3000'] });
           const portableIdentity = await identity.export();
-          this.identity = portableIdentity;
+          this.identities = await DWeb.identity.list()
           e.target.loading = false;
           router.navigateTo(`/profiles/${portableIdentity.portableDid.uri}`);
         }}">

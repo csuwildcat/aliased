@@ -4,16 +4,12 @@ import '../components/shoelace';
 import '../components/connect-widget';
 import PageStyles from '../styles/page';
 
-import { SpinnerMixin, SpinnerStyles } from '../utils/spinner';
+import { State, Spinner } from '../components/mixins';
 
-import { Stateful } from '../utils/state';
-
-export class ProfilePage extends Stateful(LitElement) {
+export class ProfilePage extends LitElement.with(State, Spinner) {
 
   static properties = {
-    identity: { store: 'app' },
     identities: { store: 'page' },
-    web5: { store: 'page' }
   }
 
   constructor() {
@@ -33,7 +29,6 @@ export class ProfilePage extends Stateful(LitElement) {
 
   static styles = [
     PageStyles,
-    SpinnerStyles,
     css`
       :host {
         

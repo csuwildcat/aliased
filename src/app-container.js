@@ -1,4 +1,5 @@
 import { LitElement, css, html } from 'lit'
+
 import litLogo from './assets/lit.svg'
 import appLogo from '/favicon.svg'
 
@@ -7,59 +8,62 @@ import './components/shoelace';
 import './components/connect-widget';
 
 import { AppRouter } from './utils/router';
-import { Stateful } from './utils/state';
+import { State, Query } from './components/mixins';
 import { DWeb } from './utils/dweb';
+// import { Datastore } from './utils/datastore';
 
 import { activatePolyfills } from '@web5/api';
 activatePolyfills();
 
 import './pages/profile';
-import './pages/directory';
-import './pages/settings';
+import './pages/find';
+import './pages/identities';
 import PageStyles from './styles/page';
 
-export class AppContainer extends Stateful(LitElement) {
+export class AppContainer extends LitElement.with(State, Query) {
 
   static properties = {
-    identity: { store: 'app' },
     identities: { store: 'page' },
-    web5: { store: 'page' }
+    ready: { store: 'page' }
   }
+
+  static query = {
+    connectModal: '#connect_modal',
+    nav: '#nav',
+    pages: '#pages',
+    profilePage: '#profile',
+    directoryPage: '#directory',
+    identitiesPage: '#identities'
+  }
+
 
   constructor() {
     super()
 
     this.router = globalThis.router = new AppRouter(this, {
       onRouteChange: async (route, path) => {
-        this?.nav?.removeAttribute('nav-open');
+        this?.nav?.removeAttribute('open');
       },
       routes: [
         {
           path: '/',
-          component: '#directory'
+          component: '#identities'
         },
         {
           path: '/profiles(/)?:did?',
-          component: '#profile'
-        },
-        {
-          path: '/settings',
-          component: '#settings'
-        },
+          component: '#find'
+        }
       ]
     });
 
-    const identity = DWeb.storage.get('connectedIdentity');
-    if (identity) this.identity = identity;
+    DWeb.identity.list().then(async list => {
+      this.identities = list;
+      this.ready = true;
+    })
   }
 
   firstUpdated() {
-    this.connectModal = this.shadowRoot.querySelector('#connect_modal');
-    this.nav = this.shadowRoot.querySelector('#nav');
-    this.pages = this.shadowRoot.querySelector('#pages');
-    this.profilePage = this.shadowRoot.querySelector('#profile');
-    this.directoryPage = this.shadowRoot.querySelector('#directory');
-    this.settingsPage = this.shadowRoot.querySelector('#settings');
+
   }
 
   async willUpdate(props){
@@ -69,15 +73,11 @@ export class AppContainer extends Stateful(LitElement) {
       if (oldDid !== newDid && !oldDid !== !newDid) {
         if (newDid && newDid !== this.loadingDid && newDid !== this?.web5?.connectedDid) {
           this.loadingDid = newDid;
-          DWeb.storage.set('connectedIdentity', this.identity);
-          DWeb.identity.list().then(list => this.identities = list)
-          DWeb.use(this.identity).then(web5 => {
-            this.web5 = web5;
-            this.loadingDid = null;
-          })
+          
+          
         }
         else if (this.web5) {
-          DWeb.dispose(this.web5);
+          
         }
       }
     }
@@ -87,54 +87,25 @@ export class AppContainer extends Stateful(LitElement) {
     return html`
 
       <header id="header">
-        <sl-icon id="nav_toggle" name="list" @click="${e => this.nav.toggleAttribute('nav-open')}"></sl-icon>
-        <sl-icon id="logo_icon" name="search-square"></sl-icon>
-        <h1>WhoDID</h1>
-        ${
-          this.identity ?
-            html`
-              <a href="/profiles/${this.identity.portableDid.uri}">
-                <sl-avatar id="header_avatar" image="" label="User avatar"></sl-avatar>
-              </a>
-            ` :
-            html`
-              <sl-button size="small" @click="${ e => this.connectModal.show() }">
-                <sl-icon slot="prefix" name="box-arrow-in-right"></sl-icon>
-                Connect
-              </sl-button>
-            `
-        }
+        <sl-icon id="nav_toggle" name="list" @click="${e => this.nav.toggleAttribute('open')}"></sl-icon>
+        <sl-icon id="logo_icon" name="passport"></sl-icon>
+        <h1>iPass</h1>
       </header>
 
-      <nav id="nav" @click="${e => this.nav.removeAttribute('nav-open')}">
+      <nav id="nav" @click="${e => this.nav.removeAttribute('open')}">
         <a href="/" ?active="${location.pathname === '/'}">
-          <sl-icon slot="prefix" name="search"></sl-icon>
-          Find
+          <sl-icon slot="prefix" name="people"></sl-icon>
+          My IDs
         </a>
-        ${this.identity ?
-          html`
-            <a href="/profiles/${this.identity.portableDid.uri}" ?active="${location.pathname.match(`/profiles/${this.identity.portableDid.uri}`)}">
-              <sl-avatar image="" label="User avatar"></sl-avatar>
-              Profile
-            </a>
-          ` :
-          html`
-            <a href="/profiles" ?active="${location.pathname.match('/profiles') && !location.pathname.match(`/profiles/${this?.context?.did}`)}">
-              <sl-icon slot="prefix" name="person"></sl-icon>
-              Profile
-            </a>
-          `
-        }
-        <a href="/settings" ?active="${location.pathname === '/settings'}">
-          <sl-icon slot="prefix" name="gear"></sl-icon>
+        <a href="/profiles" ?active="${location.pathname.startsWith('/profiles')}">
+          <sl-icon slot="prefix" name="search"></sl-icon>
           Find
         </a>
       </nav>
 
       <main id="pages">
-        <directory-page id="directory"></directory-page>
-        <profile-page id="profile"></profile-page>
-        <settings-page id="settings"></settings-page>
+        <find-page id="find"></find-page>
+        <identities-page id="identities"></identities-page>
       </main>
 
       <sl-dialog id="connect_modal" label="Connect" placement="start" fit-content ?open="${this?.connectModal?.open && this.identity && false}">
@@ -215,6 +186,7 @@ export class AppContainer extends Stateful(LitElement) {
         align-items: center;
         justify-content: center;
         height: 4rem;
+        margin: 0 0 0.5rem;
         font-size: 0.75rem;
         color: rgba(255,255,255,0.75);
         border-right: 2px solid transparent;
@@ -231,7 +203,7 @@ export class AppContainer extends Stateful(LitElement) {
       }
 
       #nav sl-avatar {
-        --size: 1.7rem;
+        --size: 1.55rem;
       }
 
       #nav sl-icon[name="search"] {
@@ -285,7 +257,7 @@ export class AppContainer extends Stateful(LitElement) {
           transform: translateX(-100%);
           z-index: 1;
         }
-        #nav[nav-open] {
+        #nav[open] {
           transform: translateX(0);
         }
         #nav a {

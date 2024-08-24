@@ -71,12 +71,152 @@ async function registerEndpoints(agent, identity, dwnEndpoints = [], registratio
   }
 }
 
+function triggerDownload(filename, data, type = 'application/json'){
+  const blob = new Blob([data], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function triggerForm(didUri, portableDid, element = document.body) {
+
+  const iframe = document.createElement('iframe');
+  iframe.src = location.origin;
+  iframe.style.position = 'fixed';
+  iframe.style.top = '0';
+  iframe.style.left = '0';
+  iframe.style.width = '1px';
+  iframe.style.height = '1px';
+  iframe.style.zIndex = '-1000';
+
+  iframe.addEventListener('load', function() {
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+    const form = iframeDoc.createElement('form');
+          form.action = '#';
+          form.method = 'POST';
+
+    const username = iframeDoc.createElement('input');
+          username.type = 'text';
+          username.name = 'username';
+          username.value = didUri;
+          username.autocomplete = 'username';
+    form.append(username);
+
+    const password = iframeDoc.createElement('input');
+          password.type = 'password';
+          password.name = 'password';
+          password.value = deflate(portableDid);
+          password.autocomplete = 'current-password';
+    form.append(password);
+
+    iframeDoc.body.append(form);
+
+    form.submit();
+
+    setTimeout(() => iframe.remove(), 100);
+
+  }, { once: true });
+
+  element.append(iframe);
+}
+
+const keyMap = {
+  Ed25519: {
+    kty: 'OKP',
+    alg: 'EdDSA'
+  },
+  secp256k1: {
+    kty: 'EC',
+    alg: 'ES256K'
+  }
+}
+
+function deflate(json){
+  json = structuredClone(json);
+  const did = json.portableDid;
+  const doc = did.document;
+  delete doc.id;
+  delete json.metadata;
+  doc.verificationMethod = doc.verificationMethod.map(jwk => {
+    return { id: jwk.id }
+  })
+  did.privateKeys.forEach(jwk => {
+    delete jwk.kty;
+    delete jwk.kid;
+    delete jwk.alg;
+  })
+  let result = JSON.stringify(json).replace(new RegExp(did.uri, 'g'), '');
+  result = JSON.parse(result)
+  result.portableDid.uri = did.uri;
+  // gzip zip up
+  return JSON.stringify(result);
+}
+
+function inflate(string){
+  // gzip unzip
+  let json = JSON.parse(string);
+  const uri = json.portableDid.uri;
+  const did = json.portableDid;
+  const doc = did.document;
+  
+  doc.id = uri;
+  
+  json.metadata = {
+    name: uri,
+    uri: uri,
+    tenant: uri
+  }
+  did.privateKeys = did.privateKeys.map(jwk => Object.assign(jwk, keyMap[jwk.crv]))
+  
+  doc.verificationMethod = doc.verificationMethod.map((jwk, i) => {
+    let key = JSON.parse(JSON.stringify(did.privateKeys[i]))
+    delete key.d;
+    return {
+      id: uri + jwk.id,
+      type: 'JsonWebKey',
+      controller: uri,
+      publicKeyJwk: key
+    }
+  });
+
+  ['authentication', 'assertionMethod', 'capabilityDelegation', 'capabilityInvocation', 'keyAgreement'].forEach(purpose => {
+    let ids = doc[purpose];
+    if (ids) doc[purpose] = ids.map(id => uri + id)
+  })
+  
+  doc?.service.forEach(service => {
+    if (service.type === 'DecentralizedWebNode') {
+      service.id = uri + service.id;
+      service.enc = uri + service.enc || '';
+      service.sig = uri + service.sig || '';
+    }
+  }) 
+  return json;
+}
+
+
 async function getAgent(){
   return DWeb.initialize({ portableAgent: false });
 }
 
 async function getPortableDid(identity){
-  await identity?.export?.() || identity;
+  return identity?.export?.() || identity;
+}
+
+async function importIdentity(agent, portableIdentity){
+  const uri = portableIdentity?.portableDid?.uri;
+  console.log(uri, portableIdentity);
+  let exists = await agent.identity.get({ didUri: uri, tenant: uri })
+  console.log(exists);
+  if (!exists) {
+    await agent.identity.import({ portableIdentity });
+  }
 }
 
 export const DWeb = globalThis.DWeb = {
@@ -137,20 +277,12 @@ export const DWeb = globalThis.DWeb = {
       return identities.find(identity => identity.did.uri === uri);
     },
     async backup (identity, options = {}){
-      const portableDid = getPortableDid(identity);
+      const portableDid = await getPortableDid(identity);
       if (options.to === 'file') {
-        const blob = new Blob([JSON.stringify(portableDid, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = identity.did.uri.replace(/:/g, '+');
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        triggerDownload(identity.did.uri.replace(/:/g, '+'), JSON.stringify(portableDid, null, 2))
       }
       else {
-        // spike password manager
+        triggerForm((options.name ? options.name + ' | ' : '') + identity.did.uri, portableDid);
       }
     },
     async restore (options = {}){
@@ -168,13 +300,7 @@ export const DWeb = globalThis.DWeb = {
               const contents = e.target.result;
               try {
                 const portableIdentity = JSON.parse(contents);
-                const uri = portableIdentity?.portableDid?.uri;
-                console.log(uri, portableIdentity);
-                let exists = await agent.identity.get({ didUri: uri, tenant: uri })
-                console.log(exists);
-                if (!exists) {
-                  await agent.identity.import({ portableIdentity });
-                }
+                importIdentity(agent, portableIdentity);
                 resolve(portableIdentity);
               }
               catch (error) {
@@ -186,7 +312,9 @@ export const DWeb = globalThis.DWeb = {
           input.click();
         }
         else {
-          // spike password manager
+          let portableIdentity = typeof options.backup === 'string' ? JSON.parse(options.backup) : this.backup;
+          importIdentity(agent, portableIdentity);
+          resolve(portableIdentity);
         }
       })
     }

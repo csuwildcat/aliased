@@ -3,14 +3,12 @@ import { LitElement, css, html } from 'lit'
 import '../components/shoelace';
 import PageStyles from '../styles/page.js';
 
-import { Stateful } from '../utils/state';
+import { State } from '../components/mixins';
 
-export class BlankPage extends Stateful(LitElement) {
+export class BlankPage extends LitElement.with(State) {
 
   static properties = {
-    identity: { store: 'app' },
-    identities: { store: 'page' },
-    web5: { store: 'page' }
+    identities: { store: 'page' }
   }
 
   constructor() {

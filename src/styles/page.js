@@ -10,7 +10,7 @@ export default css`
   box-sizing: border-box;
   width: 100%;
   max-width: var(--content-max-width);
-  padding: 2rem;
+  padding: 3rem 2rem;
 }
 
 /* 

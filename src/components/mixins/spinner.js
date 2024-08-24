@@ -1,31 +1,37 @@
 import { css } from 'lit';
-import { DOM } from './dom.js';
-import '../components/shoelace.js'
+import { DOM } from '../../utils/dom.js';
+import '../shoelace.js'
 
 const transitionDuration = 300;
 
-export const SpinnerStyles = css`
-  .spinner-mixin {
-    position: absolute;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    background: var(--sl-panel-background-color);
-    inset: 0;
-    opacity: 0;
-    transition: opacity ${transitionDuration}ms ease;
-    z-index: 1000;
-    pointer-events: none;
-  }
+export const Spinner = (Base) => class extends Base {
 
-  .spinner-mixin[spinner-show] {
-    opacity: 1;
-    pointer-events: all;
-  }
-`;
+  static get styles() {
+    const baseStyles = super.styles || [];
+    return [
+      ...(Array.isArray(baseStyles) ? baseStyles : [baseStyles]),
+      css`
+        .spinner-mixin {
+          position: absolute;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 3rem;
+          background: var(--sl-panel-background-color);
+          inset: 0;
+          opacity: 0;
+          transition: opacity ${transitionDuration}ms ease;
+          z-index: 1000;
+          pointer-events: none;
+        }
 
-export const SpinnerMixin = (BaseClass) => class extends BaseClass {
+        .spinner-mixin[spinner-show] {
+          opacity: 1;
+          pointer-events: all;
+        }
+      `,
+    ];
+  }
 
   constructor() {
     super();
