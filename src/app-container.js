@@ -15,7 +15,6 @@ import { DWeb } from './utils/dweb';
 import { activatePolyfills } from '@web5/api';
 activatePolyfills();
 
-import './pages/profile';
 import './pages/find';
 import './pages/identities';
 import PageStyles from './styles/page';

@@ -3,7 +3,7 @@ import { LitElement, css, html } from 'lit'
 import '../components/shoelace.js';
 import PageStyles from '../styles/page.js';
 
-import { State, Query, Spinner } from '../components/mixins';
+import { State, Query, Spinner, SpinnerStyles } from '../components/mixins';
 
 export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
@@ -22,7 +22,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
   firstUpdated() {
     if (!this.ready) {
-      this.startSpinner();
+      this.startSpinner('section', { minimum: 1200, renderImmediate: true });
     }
   }
 
@@ -33,48 +33,48 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
   }
 
   render() {
-    if (!this.ready) {
-      return html``;
-    }
-    return this?.identities?.length ? html`
+    return html`
       <section>
-        <h2>Identities</h2>
-        <ul id="identity_list" limit-width>
-          ${this?.identities?.map(identity => html`
-            <li flex="center-y">
-              
-              <a href="/profiles/${identity.did.uri}">
-                <sl-avatar image="" shape="circle" size="small"></sl-avatar>
-                ${identity.did.uri}
-              </a>
-              <sl-button size="small" @click="${ e => DWeb.identity.backup(identity, { to: 'file' }) }">
-                <sl-icon slot="prefix" name="download"></sl-icon> Backup
-              </sl-button>
-            </li>
-          `)}
-        </ul>
-        <sl-button id="create_identity_button" variant="success" size="small" @click="${ async e => {
-          if (this.createIdentityButton.loading) return false;
-          this.createIdentityButton.loading = true;
-          await DWeb.identity.create({ dwnEndpoints: ['http://localhost:3000'] });
-          DWeb.identity.list().then(list => this.identities = list);
-          this.createIdentityButton.loading = false;
-        }}">
-          Create New Identity
-        </sl-button>
+        ${ !this?.identities?.length ? 
+          html`<connect-widget></connect-widget>` : 
+          html`
+            <h2>Identities</h2>
+            <ul id="identity_list" limit-width>
+              ${this.identities.map(identity => html`
+                <li flex="center-y">
+                  
+                  <a href="/profiles/${identity.did.uri}">
+                    <sl-avatar image="" shape="circle" size="small"></sl-avatar>
+                    ${identity.did.uri}
+                  </a>
+                  <sl-button size="small" @click="${ e => DWeb.identity.backup(identity, { to: 'file' }) }">
+                    <sl-icon slot="prefix" name="download"></sl-icon> Backup
+                  </sl-button>
+                </li>
+              `)}
+            </ul>
+            <sl-button id="create_identity_button" variant="success" size="small" @click="${ async e => {
+              if (this.createIdentityButton.loading) return false;
+              this.createIdentityButton.loading = true;
+              await DWeb.identity.create({ dwnEndpoints: ['http://localhost:3000'] });
+              DWeb.identity.list().then(list => this.identities = list);
+              this.createIdentityButton.loading = false;
+            }}">
+              Create New Identity
+            </sl-button>
+          `
+        }
       </section>
 
       <sl-dialog id="create_identity_modal" label="Create an Identity" placement="start" fit-content>
         
       </sl-dialog>
-    ` :
-    html`
-      <connect-widget></connect-widget>
     `
   }
 
   static styles = [
     PageStyles,
+    SpinnerStyles,
     css`
       :host {
         

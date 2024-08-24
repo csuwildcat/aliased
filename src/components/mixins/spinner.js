@@ -4,34 +4,28 @@ import '../shoelace.js'
 
 const transitionDuration = 300;
 
-export const Spinner = (Base) => class extends Base {
-
-  static get styles() {
-    const baseStyles = super.styles || [];
-    return [
-      ...(Array.isArray(baseStyles) ? baseStyles : [baseStyles]),
-      css`
-        .spinner-mixin {
-          position: absolute;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 3rem;
-          background: var(--sl-panel-background-color);
-          inset: 0;
-          opacity: 0;
-          transition: opacity ${transitionDuration}ms ease;
-          z-index: 1000;
-          pointer-events: none;
-        }
-
-        .spinner-mixin[spinner-show] {
-          opacity: 1;
-          pointer-events: all;
-        }
-      `,
-    ];
+export const SpinnerStyles = css`
+  .spinner-mixin {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    background: var(--sl-panel-background-color);
+    inset: 0;
+    opacity: 0;
+    transition: opacity ${transitionDuration}ms ease;
+    z-index: 1000;
+    pointer-events: none;
   }
+
+  .spinner-mixin[spinner-show] {
+    opacity: 1;
+    pointer-events: all;
+  }
+`;
+
+export const Spinner = (Base) => class extends Base {
 
   constructor() {
     super();
@@ -60,7 +54,7 @@ export const Spinner = (Base) => class extends Base {
     return node;
   }
 
-  async startSpinner(selector, options = {}){
+  async startSpinner(selector, options = { renderImmediate: false, minimum: 0 }) {
     await this.#firstUpdatedPromise;
     const host = selector ? this.shadowRoot.querySelector(selector) : this.shadowRoot;
     let spinner = host.querySelector('.spinner-mixin');

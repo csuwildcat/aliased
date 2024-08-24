@@ -6,4 +6,4 @@ LitElement.with = function(...mixins) {
 
 export { State } from './state.js';
 export { Query } from './query.js';
-export { Spinner } from './spinner.js';
+export { Spinner, SpinnerStyles } from './spinner.js';
