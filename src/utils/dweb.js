@@ -83,123 +83,46 @@ function triggerDownload(filename, data, type = 'application/json'){
   URL.revokeObjectURL(url);
 }
 
-async function triggerForm(didUri, portableDid, element = document.body) {
+async function triggerForm(fields, element = document.body) {
+  new Promise(resolve => {
+    const iframe = document.createElement('iframe');
+    iframe.src = location.origin;
+    iframe.style.position = 'fixed';
+    iframe.style.top = '0';
+    iframe.style.left = '0';
+    iframe.style.width = '1px';
+    iframe.style.height = '1px';
+    iframe.style.zIndex = '-1000';
 
-  const iframe = document.createElement('iframe');
-  iframe.src = location.origin;
-  iframe.style.position = 'fixed';
-  iframe.style.top = '0';
-  iframe.style.left = '0';
-  iframe.style.width = '1px';
-  iframe.style.height = '1px';
-  iframe.style.zIndex = '-1000';
+    iframe.addEventListener('load', function() {
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
-  iframe.addEventListener('load', function() {
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      const form = iframeDoc.createElement('form');
+      form.action = '#';
+      form.method = 'POST';
 
-    const form = iframeDoc.createElement('form');
-          form.action = '#';
-          form.method = 'POST';
+      for (let field in fields) {
+        const input = iframeDoc.createElement('input');
+        input.type = 'text';
+        input.name = field;
+        input.value = fields[field];
+        input.autocomplete = field === 'password' ? 'current-password' : field;
+        form.append(input);
+      }
 
-    const username = iframeDoc.createElement('input');
-          username.type = 'text';
-          username.name = 'username';
-          username.value = didUri;
-          username.autocomplete = 'username';
-    form.append(username);
+      iframeDoc.body.append(form);
+      form.submit();
 
-    const password = iframeDoc.createElement('input');
-          password.type = 'password';
-          password.name = 'password';
-          password.value = deflate(portableDid);
-          password.autocomplete = 'current-password';
-    form.append(password);
+      setTimeout(() => {
+        iframe.remove();
+        resolve();
+      }, 100);
 
-    iframeDoc.body.append(form);
+    }, { once: true });
 
-    form.submit();
-
-    setTimeout(() => iframe.remove(), 100);
-
-  }, { once: true });
-
-  element.append(iframe);
-}
-
-const keyMap = {
-  Ed25519: {
-    kty: 'OKP',
-    alg: 'EdDSA'
-  },
-  secp256k1: {
-    kty: 'EC',
-    alg: 'ES256K'
-  }
-}
-
-function deflate(json){
-  json = structuredClone(json);
-  const did = json.portableDid;
-  const doc = did.document;
-  delete doc.id;
-  delete json.metadata;
-  doc.verificationMethod = doc.verificationMethod.map(jwk => {
-    return { id: jwk.id }
-  })
-  did.privateKeys.forEach(jwk => {
-    delete jwk.kty;
-    delete jwk.kid;
-    delete jwk.alg;
-  })
-  let result = JSON.stringify(json).replace(new RegExp(did.uri, 'g'), '');
-  result = JSON.parse(result)
-  result.portableDid.uri = did.uri;
-  // gzip zip up
-  return JSON.stringify(result);
-}
-
-function inflate(string){
-  // gzip unzip
-  let json = JSON.parse(string);
-  const uri = json.portableDid.uri;
-  const did = json.portableDid;
-  const doc = did.document;
-  
-  doc.id = uri;
-  
-  json.metadata = {
-    name: uri,
-    uri: uri,
-    tenant: uri
-  }
-  did.privateKeys = did.privateKeys.map(jwk => Object.assign(jwk, keyMap[jwk.crv]))
-  
-  doc.verificationMethod = doc.verificationMethod.map((jwk, i) => {
-    let key = JSON.parse(JSON.stringify(did.privateKeys[i]))
-    delete key.d;
-    return {
-      id: uri + jwk.id,
-      type: 'JsonWebKey',
-      controller: uri,
-      publicKeyJwk: key
-    }
+    element.append(iframe);
   });
-
-  ['authentication', 'assertionMethod', 'capabilityDelegation', 'capabilityInvocation', 'keyAgreement'].forEach(purpose => {
-    let ids = doc[purpose];
-    if (ids) doc[purpose] = ids.map(id => uri + id)
-  })
-  
-  doc?.service.forEach(service => {
-    if (service.type === 'DecentralizedWebNode') {
-      service.id = uri + service.id;
-      service.enc = uri + service.enc || '';
-      service.sig = uri + service.sig || '';
-    }
-  }) 
-  return json;
 }
-
 
 async function getAgent(){
   return DWeb.initialize({ portableAgent: false });
@@ -209,13 +132,14 @@ async function getPortableDid(identity){
   return identity?.export?.() || identity;
 }
 
-async function importIdentity(agent, portableIdentity){
+async function importIdentity(agent, portableIdentity, manage = false){
   const uri = portableIdentity?.portableDid?.uri;
-  console.log(uri, portableIdentity);
-  let exists = await agent.identity.get({ didUri: uri, tenant: uri })
-  console.log(exists);
+  let exists = await agent.identity.get({ didUri: uri })
   if (!exists) {
     await agent.identity.import({ portableIdentity });
+    if (manage) {
+      await agent.identity.manage({ portableIdentity })
+    }
   }
 }
 
@@ -241,7 +165,37 @@ export const DWeb = globalThis.DWeb = {
         storage.set('agentDid', did)
       }
       let agentDid = await BearerDid.import({ portableDid: did })
-      DWeb.agent = await Web5UserAgent.create({ agentDid });
+      const agent = DWeb.agent = await Web5UserAgent.create({ agentDid });
+      const resolving = {};
+      agent.did.cache.get = async function get(did) {
+        try {
+          const str = await this.cache.get(did);
+          const cachedResult = JSON.parse(str);
+          if (!resolving[did] && Date.now() >= cachedResult.ttlMillis) {
+            resolving[did] = true;
+            const list = await agent.identity.list();
+            if (agent.agentDid.uri === did || list.find(identity => identity.did.uri === did)) {
+              agent.did.resolve(did).then(result => {
+                if (!result.didResolutionMetadata.error) {
+                  agent.did.cache.set(did, result);
+                }
+              }).finally(e => delete resolving[did])
+            }
+            else {
+              delete resolving[did];
+              this.cache.nextTick(() => this.cache.del(did));
+              return;
+            }
+          }
+          return cachedResult.value;
+        } catch(error) {
+          if (error.notFound) {
+            return;
+          }
+          throw error;
+        }
+      }
+
       resolve(DWeb.agent);
     }))
   },
@@ -276,45 +230,33 @@ export const DWeb = globalThis.DWeb = {
       const identities = await this.list();
       return identities.find(identity => identity.did.uri === uri);
     },
+    async addAutofillDid(value){
+      triggerForm({ email: value });
+    },
     async backup (identity, options = {}){
       const portableDid = await getPortableDid(identity);
-      if (options.to === 'file') {
+      if (!options.to || options.to === 'file') {
         triggerDownload(identity.did.uri.replace(/:/g, '+'), JSON.stringify(portableDid, null, 2))
       }
       else {
-        triggerForm((options.name ? options.name + ' | ' : '') + identity.did.uri, portableDid);
+        console.warn(`The mechanism to backup to ${options.to} is not yet implemented`);
       }
     },
     async restore (options = {}){
       const agent = await getAgent();
-      return new Promise((resolve, reject) => {
-        if (options.from === 'file') {
-          const input = document.createElement('input');
-          input.type = 'file';
-          input.accept = '.json';
-          input.onchange = (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
+      return new Promise(async (resolve, reject) => {
+        if (!options.from || options.from === 'file') {
+          await Promise.all(options?.files?.map(file => {
             const reader = new FileReader();
             reader.onload = async (e) => {
-              const contents = e.target.result;
-              try {
-                const portableIdentity = JSON.parse(contents);
-                importIdentity(agent, portableIdentity);
-                resolve(portableIdentity);
-              }
-              catch (error) {
-                reject(error)
-              }
-            };
+              const portableIdentity = JSON.parse(e.target.result);
+              await importIdentity(agent, portableIdentity, true);
+            }
             reader.readAsText(file);
-          };
-          input.click();
+          })).then(resolve).catch(reject);
         }
         else {
-          let portableIdentity = typeof options.backup === 'string' ? JSON.parse(options.backup) : this.backup;
-          importIdentity(agent, portableIdentity);
-          resolve(portableIdentity);
+          console.warn(`The mechanism to restore from ${options.from} is not yet implemented`);
         }
       })
     }

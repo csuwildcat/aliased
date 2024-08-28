@@ -164,13 +164,13 @@ export const profile = {
   definition: profileDefinition
 }
 
-export const social = {
-  uri: socialDefinition.protocol,
-  schemas: addSchemas(socialDefinition),
-  definition: socialDefinition
-}
+// export const social = {
+//   uri: socialDefinition.protocol,
+//   schemas: addSchemas(socialDefinition),
+//   definition: socialDefinition
+// }
 
 export const byUri = {
   [profileDefinition.protocol]: profile,
-  [socialDefinition.protocol]: social,
+  // [socialDefinition.protocol]: social,
 }

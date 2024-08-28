@@ -29,7 +29,7 @@ clientsClaim()
 activatePolyfills({
   onCacheCheck(event, route){
     return {
-      ttl: 30000
+      ttl: 60_000 * 5
     }
   }
 });

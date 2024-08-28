@@ -1,6 +1,23 @@
 :root {
 
-  --body-bk: #262629;
+  --body-bk: #17171a;
+  --content-max-width: 700px;
+  --scroll-distance: 0;
+  /* --font-family: 'Lato', serif;
+  --sl-font-sans: var(--font-family);
+  --logo-font: 'Tajawal', sans-serif; */
+  /* --header-bk: #004571; */
+  --header-height: 3.25rem;
+  /* --link-color: #009dff !important; */
+  --content-height: calc(100vh - var(--header-height));
+  /* --link-color: #ffd856 !important; */
+  --block-bk: var(--grey);
+  --block-radius: 0.5em;
+  --block-shadow: 0 0 2px 0 inset rgba(255 255 255 / 10%), 0 1px 3px 0px rgba(0 0 0 / 0.4);
+  /* 0 0 1px 0px inset rgba(255,255,255,0.2) */
+  --grey: #232328;
+  --grey-light: hsl(240 3% 23% / 1);
+  --grey-lighter: hsl(240 3% 35% / 1);
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

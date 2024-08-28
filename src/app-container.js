@@ -10,7 +10,7 @@ import './components/connect-widget';
 import { AppRouter } from './utils/router';
 import { State, Query } from './components/mixins';
 import { DWeb } from './utils/dweb';
-// import { Datastore } from './utils/datastore';
+import { Datastore } from './utils/datastore';
 
 import { activatePolyfills } from '@web5/api';
 activatePolyfills();
@@ -22,7 +22,7 @@ import PageStyles from './styles/page';
 export class AppContainer extends LitElement.with(State, Query) {
 
   static properties = {
-    identities: { store: 'page' },
+    identities: { store: 'page', test: true },
     ready: { store: 'page' }
   }
 
@@ -55,9 +55,16 @@ export class AppContainer extends LitElement.with(State, Query) {
       ]
     });
 
+    let ready;
+    this.ready = new Promise(resolve => ready = resolve);
     DWeb.identity.list().then(async list => {
+      await Promise.all(list.map(async identity => {
+        const web5 = identity.web5 = await DWeb.use(identity);
+        identity.datastore = new Datastore(web5);
+      }));
       this.identities = list;
-      this.ready = true;
+      this.ready.state = true;
+      ready(true);
     })
   }
 
@@ -66,19 +73,8 @@ export class AppContainer extends LitElement.with(State, Query) {
   }
 
   async willUpdate(props){
-    if (props.has('identity')) { 
-      const oldDid = props.get('identity')?.portableDid?.uri;
-      const newDid = this?.identity?.portableDid?.uri;
-      if (oldDid !== newDid && !oldDid !== !newDid) {
-        if (newDid && newDid !== this.loadingDid && newDid !== this?.web5?.connectedDid) {
-          this.loadingDid = newDid;
-          
-          
-        }
-        else if (this.web5) {
-          
-        }
-      }
+    if (props.has('identities') && this.identities) { 
+
     }
   }
 
@@ -87,8 +83,8 @@ export class AppContainer extends LitElement.with(State, Query) {
 
       <header id="header">
         <sl-icon id="nav_toggle" name="list" @click="${e => this.nav.toggleAttribute('open')}"></sl-icon>
-        <sl-icon id="logo_icon" name="passport"></sl-icon>
-        <h1>iPass</h1>
+        <sl-icon id="logo_icon" name="hood"></sl-icon>
+        <h1>liased</h1>
       </header>
 
       <nav id="nav" @click="${e => this.nav.removeAttribute('open')}">
@@ -103,8 +99,8 @@ export class AppContainer extends LitElement.with(State, Query) {
       </nav>
 
       <main id="pages">
-        <find-page id="find"></find-page>
-        <identities-page id="identities"></identities-page>
+        <find-page id="find" page></find-page>
+        <identities-page id="identities" page></identities-page>
       </main>
 
       <sl-dialog id="connect_modal" label="Connect" placement="start" fit-content ?open="${this?.connectModal?.open && this.identity && false}">
@@ -134,9 +130,9 @@ export class AppContainer extends LitElement.with(State, Query) {
         height: var(--header-height);
         padding: 0 0.5rem;
         background: var(--sl-color-blue-100);
-        box-shadow: 0 0 2px 1px rgba(0 0 0 / 35%);
+        box-shadow: 0 0 2px 2px rgba(0 0 0 / 25%);
         user-select: none;
-        z-index: 1;
+        z-index: 2;
       }
 
       #nav_toggle {
@@ -154,8 +150,8 @@ export class AppContainer extends LitElement.with(State, Query) {
       }
 
       #logo_icon {
-        margin: 0 0.25rem 0 0;
-        font-size: 2rem;
+        margin: 0 -0.05rem -0.25rem 0;
+        font-size: 2.2rem;
       }
 
       #header h1 {
@@ -167,6 +163,10 @@ export class AppContainer extends LitElement.with(State, Query) {
         --size: calc(var(--header-height) - 1rem);
       }
 
+      :host-context(html[class~="sl-scroll-lock"]) #pages {
+        z-index: 3;
+      } 
+
       #nav {
         position: fixed;
         bottom: 0;
@@ -174,9 +174,12 @@ export class AppContainer extends LitElement.with(State, Query) {
         height: var(--content-height);
         width: var(--nav-width);
         padding: 0.6rem 0;
-        background: #1a1a1e;
+        background: var(--grey);
+        box-shadow: 0 0 2px 1px rgba(0 0 0 / 25%);
+        border-right: 1px solid rgba(0 0 0 / 60%);
         text-align: center;
         transition: transform 0.3s ease;
+        z-index: 1;
       }
 
       #nav a {
@@ -216,7 +219,12 @@ export class AppContainer extends LitElement.with(State, Query) {
 
       #nav a[active] {
         opacity: 1;
+        color: rgb(122 153 255);
         border-right: 2px solid rgb(65 110 255);
+      }
+
+      #nav a[active] sl-icon {
+        color: currentColor;
       }
 
       #pages {
@@ -225,15 +233,14 @@ export class AppContainer extends LitElement.with(State, Query) {
       }
 
       #pages > * {
-        display: flex;
-        justify-content: center;
+        display: block;
         position: absolute;
         top: 0;
         box-sizing: border-box;
         width: 100%;
         height: var(--content-height);
+        padding: 2.5em 2.25em 2em;
         opacity: 0;
-        background: var(--body-bk);
         visibility: hidden;
         transition: visibility 0.3s, opacity 0.3s ease;
         overflow: hidden;

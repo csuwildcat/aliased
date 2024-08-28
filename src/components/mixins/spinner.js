@@ -11,7 +11,7 @@ export const SpinnerStyles = css`
     align-items: center;
     justify-content: center;
     font-size: 3rem;
-    background: var(--sl-panel-background-color);
+    background: var(--body-bk);
     inset: 0;
     opacity: 0;
     transition: opacity ${transitionDuration}ms ease;
@@ -22,6 +22,11 @@ export const SpinnerStyles = css`
   .spinner-mixin[spinner-show] {
     opacity: 1;
     pointer-events: all;
+  }
+
+  .spinner-mixin[spinner-options~="fixed"] {
+    position: fixed;
+    inset: 0;
   }
 `;
 
@@ -54,23 +59,25 @@ export const Spinner = (Base) => class extends Base {
     return node;
   }
 
-  async startSpinner(selector, options = { renderImmediate: false, minimum: 0 }) {
+  async startSpinner(options = { renderImmediate: false, minimum: 0, fixed: false }) {
+    const styleOptions = (options.fixed ? 'fixed' : '');
     await this.#firstUpdatedPromise;
-    const host = selector ? this.shadowRoot.querySelector(selector) : this.shadowRoot;
+    const host = options.selector ? this.shadowRoot.querySelector(options.selector) : this.shadowRoot;
     let spinner = host.querySelector('.spinner-mixin');
     if (spinner) {
       spinner.setAttribute('spinner-show', '');
       return;
     }
     spinner = this.#createSpinnerElement();
+    spinner.setAttribute('spinner-options', styleOptions);
     host.append(spinner);
     if (options.minimum) spinner._spinnerMixinDelay = DOM.delay(options.minimum);
     options.renderImmediate ? spinner.setAttribute('spinner-show', '') : DOM.skipFrame(() => spinner.setAttribute('spinner-show', ''));
     await DOM.delay(transitionDuration);
   }
 
-  async stopSpinner(selector){
-    const host = selector ? this.shadowRoot.querySelector(selector) : this.shadowRoot;
+  async stopSpinner(options = {}){
+    const host = options.selector ? this.shadowRoot.querySelector(options.selector) : this.shadowRoot;
     const spinner = host.querySelector('.spinner-mixin');
     await spinner?._spinnerMixinDelay;
     spinner?.removeAttribute?.('spinner-show');

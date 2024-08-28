@@ -12,7 +12,7 @@ export class AppRouter extends Router {
       enteringRoute.enter = async (path) => {
         this.activeComponent?.removeAttribute?.('route-state');
         await Promise.all([
-          props?.onRouteChange?.(enteringRoute, path)?.onRouteChange?.(enteringRoute, path),
+          props?.onRouteChange?.(enteringRoute, path),
           this.activeComponent?.onRouteLeave?.(enteringRoute, path),
           enteringRoute?.onEnter?.(path) 
         ])

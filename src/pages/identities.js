@@ -1,6 +1,9 @@
 import { LitElement, css, html } from 'lit'
 
 import '../components/shoelace.js';
+import '@vaadin/upload';
+
+import '../components/create-identity';
 import PageStyles from '../styles/page.js';
 
 import { State, Query, Spinner, SpinnerStyles } from '../components/mixins';
@@ -8,12 +11,16 @@ import { State, Query, Spinner, SpinnerStyles } from '../components/mixins';
 export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
   static properties = {
-    ready: { store: 'page' },
+    ready: { store: 'page', test: true },
     identities: { store: 'page' }
   }
 
   static query = {
-    createIdentityButton: '#create_identity_button'
+    createIdentityButton: '#create_identity_button',
+    createIdentityModal: ['#create_identity_modal', true],
+    restoreIdentityModal: ['#restore_identity_modal', true],
+    restoreIdentityButton: '#restore_identity_button',
+    restoreUploader: ['#restore_uploader', true]
   }
 
   constructor() {
@@ -21,20 +28,30 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
   }
 
   firstUpdated() {
-    if (!this.ready) {
-      this.startSpinner('section', { minimum: 1200, renderImmediate: true });
+    if (!this.ready.state) {
+      this.startSpinner({ selector: 'section', minimum: 500, renderImmediate: true });
     }
+    this.ready.then(() => {
+      this.stopSpinner();
+    })
   }
 
-  updated(props){
-    if (props.has('ready') && this.ready) {
-      this.stopSpinner();
+  async handleRestoreUpload(e) {
+    if (!this.restoreUploader || !this.restoreUploader.files.length) return;
+    try {
+      await DWeb.identity.restore({ from: 'file', files: this.restoreUploader.files })
+      await DWeb.identity.list().then(list => this.identities = list);
+      this.restoreIdentityModal.hide();
     }
+    catch(e){
+      console.log(e);
+    }
+    this.restoreUploader.files = [];
   }
 
   render() {
     return html`
-      <section>
+      <section page-section>
         ${ !this?.identities?.length ? 
           html`<connect-widget></connect-widget>` : 
           html`
@@ -53,22 +70,34 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
                 </li>
               `)}
             </ul>
-            <sl-button id="create_identity_button" variant="success" size="small" @click="${ async e => {
-              if (this.createIdentityButton.loading) return false;
-              this.createIdentityButton.loading = true;
-              await DWeb.identity.create({ dwnEndpoints: ['http://localhost:3000'] });
-              DWeb.identity.list().then(list => this.identities = list);
-              this.createIdentityButton.loading = false;
-            }}">
-              Create New Identity
-            </sl-button>
+            <div id="create_restore_buttons" flex="center-x center-y">
+              <sl-button id="create_identity_button" variant="success" size="small" @click="${ async e => this.createIdentityModal.show() }">
+                <sl-icon slot="prefix" name="person-plus"></sl-icon> Create an Identity
+              </sl-button>
+              <sl-button id="restore_identity_button" variant="primary" size="small" @click="${ async e => this.restoreIdentityModal.show() }">
+                <sl-icon slot="prefix" name="person-up"></sl-icon> Restore an Identity
+              </sl-button>
+            </div>
           `
         }
       </section>
 
       <sl-dialog id="create_identity_modal" label="Create an Identity" placement="start" fit-content>
-        
+        <create-identity @identity-created="${e => this.createIdentityModal.hide() }"></create-identity>
       </sl-dialog>
+
+      <sl-dialog id="restore_identity_modal" label="Restore an Identity" placement="start" fit-content>
+        <p>Upload or drop in a backup file to restore an identity.</p>
+        <vaadin-upload
+          id="restore_uploader"
+          no-auto
+          max-files="1"
+          accept="text/json,application/json,.json"
+          @files-changed="${this.handleRestoreUpload}"
+        ></vaadin-upload>
+      </sl-dialog>
+
+      
     `
   }
 
@@ -76,18 +105,18 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
     PageStyles,
     SpinnerStyles,
     css`
-      :host {
+      :host > section {
         
       }
+
+
 
       connect-widget {
         align-self: center;
       }
 
       #identity_list li {
-        padding: 1rem 0;
         border-bottom: 1px solid rgba(0, 0, 0, 0.4);
-        cursor: pointer;
       }
 
       #identity_list li:first-child {
@@ -96,11 +125,13 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
       #identity_list a {
         width: 100%;
+        padding: 1.1rem 0 1rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         text-decoration: none;
         color: var(--sl-color-blue-700);
+        cursor: pointer;
       }
 
       #identity_list sl-avatar {
@@ -112,10 +143,30 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
         margin: 0 0 0 0.75rem;
       }
 
-      #create_identity_button {
-        display: block;
-        width: fit-content;
-        margin: 3rem auto 0;
+      #create_restore_buttons {
+        margin: 2rem 0 0;
+      }
+
+      #create_restore_buttons sl-button {
+        margin: 0 0.5rem;
+      }
+
+      vaadin-upload {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 8rem;
+        border: 2px dashed rgba(255,255,255,0.2);
+      }
+
+      vaadin-upload::part(drop-label) {
+        color: #fff;
+      }
+
+      vaadin-upload vaadin-button {
+        color: #fff;
+        background: var(--_lumo-button-primary-background);
+        cursor: pointer;
       }
 
       @media(max-width: 800px) {

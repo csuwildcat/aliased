@@ -6,11 +6,10 @@ import PageStyles from '../styles/page.js';
 import { DWeb } from '../utils/dweb';
 import { State } from '../components/mixins';
 
-export class ConnectWidget extends State(LitElement) {
+export class ConnectWidget extends LitElement.with(State) {
 
   static properties = {
-    identity: { store: 'app' },
-    web5: { store: 'page' }
+    identities: { store: 'page', test: true }
   }
 
   constructor() {
@@ -51,10 +50,10 @@ export class ConnectWidget extends State(LitElement) {
           <sl-icon slot="prefix" name="upload"></sl-icon>
           Restore from File
         </sl-button>
-        <sl-button variant="default" size="large" @click="${ e => {} }">
+        <!-- <sl-button variant="default" size="large" @click="${ e => {} }">
           <sl-icon slot="prefix" name="key-fill"></sl-icon>
           Enter as Password
-        </sl-button>
+        </sl-button> -->
       </section>
     `
   }

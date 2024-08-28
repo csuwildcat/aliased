@@ -21,10 +21,10 @@ class Datastore {
     return Datastore.cache?.[did]?.[key];
   }
 
-  constructor(web5, options){
+  constructor(web5, options = {}){
     this.options = options;
-    this.did = options.web5.connectedDid;
-    this.dwn = options.web5.dwn;
+    this.did = web5.did.connectedDid;
+    this.dwn = web5.dwn;
     this.ready = this.installProtocols();
   }
 
@@ -270,7 +270,7 @@ class Datastore {
   }
 
   async setProfileImage(type, file, _record, from = this.did){
-    let record = _record || await datastore.getProfileImage(type, { from });
+    let record = _record || await this.getProfileImage(type, { from });
     let blob = file ? new Blob([file], { type: file.type }) : undefined;
     try {
       if (blob) {
@@ -447,11 +447,11 @@ class Datastore {
   }
 
   async toggleFollow(did, follow){
-    var {records, status} = await datastore.queryFollows({ recipient: did })
+    var {records, status} = await this.queryFollows({ recipient: did })
     var record = records[0];
     if (!record) {
-      const aggregatorRecord = await datastore.getAggregators({ from: did });
-      var { record } = await datastore.createProtocolRecord('social', 'follow', { recipient: did, data: {
+      const aggregatorRecord = await this.getAggregators({ from: did });
+      var { record } = await this.createProtocolRecord('social', 'follow', { recipient: did, data: {
         aggregators: aggregatorRecord?.cache?.json?.aggregators || [],
         lastAggregatorFetch: aggregatorRecord?.dateModified || null
       }})

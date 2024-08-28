@@ -1,9 +1,9 @@
 import { LitElement, css, html } from 'lit'
 
-import '../components/shoelace';
+import '../components/shoelace.js';
 import PageStyles from '../styles/page.js';
 
-import { State } from '../components/mixins';
+import { State } from '../components/mixins/index.js';
 
 export class BlankPage extends LitElement.with(State) {
 

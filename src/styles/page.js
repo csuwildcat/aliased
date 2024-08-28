@@ -2,24 +2,9 @@ import { css } from 'lit'
 
 export default css`
 
-:host {
-  --content-max-width: 800px;
-}
-
-:host > section {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: var(--content-max-width);
-  padding: 3rem 2rem;
-}
-
-/* 
-:host > section {
+:host([page]) > * {
   margin: 0 auto;
-  padding: 2.5em 2.25em 2em;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-} */
+}
 
 :host([route-state="active"]) {
   z-index: 1;
@@ -27,6 +12,12 @@ export default css`
 
 :host([route-state="active"]) > section {
   opacity: 1;
+}
+
+[page-section] {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--content-max-width);
 }
 
 ul, ol {
@@ -65,13 +56,43 @@ sl-icon::part(svg) {
   height: 1em;
 }
 
+sl-button::part(base) {
+  align-items: center;
+}
+
 sl-button sl-icon { 
-  margin-right: -0.2em;
+  font-size: 1rem;
+  padding: 0.4rem 0;
 }
 
 sl-dialog[fit-content]::part(panel) {
   width: fit-content;
   height: fit-content;
+}
+
+sl-dialog::part(header) {
+  border-bottom: 1px solid rgb(255 255 255 / 2%);
+  box-shadow: 0 1px 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+sl-dialog::part(header-actions) {
+  padding: 0 1rem;
+}
+
+sl-dialog::part(title) {
+  padding: 1rem 1.2rem;
+}
+
+sl-dialog[tabbed]:has(sl-tab-group)::part(body) {
+  padding: 0;
+}
+
+sl-dialog[tabbed] sl-tab-panel::part(base) {
+  padding: 1rem 1rem 1.5rem;
+}
+
+sl-tab-group::part(tabs) {
+  border-bottom: 1px solid var(--track-color);
 }
 
 *::part(input-field) {
