@@ -161,8 +161,8 @@ export class ProfileView extends LitElement.with(State, Query) {
     this.loading = true;
     try {
       await this.ready;
-      this.owner = this.identities?.find(identity => identity.did.uri === did);
-      this.datastore = this.owner?.datastore || this.identities[0]?.datastore;
+      this.owner = this.identities[did];
+      this.datastore = this.owner?.datastore || Object.values(this.identities)[0]?.datastore;
       this.clearData();
       this.heroImage.style.setProperty('--deterministic-background', hashToGradient(did.split(':')[2]));
       const records = await Promise.all([
@@ -572,13 +572,12 @@ export class ProfileView extends LitElement.with(State, Query) {
 
       #hero::after {
         content: "";
+        box-sizing: border-box;
         position: absolute;
-        bottom: 0;
-        height: 100%;
-        width: 100%;
+        inset: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-bottom: var(--hero-border);
         border-radius: var(--block-radius) var(--block-radius) 0 0;
-        box-shadow: 0 7px 0px 1px rgba(255 255 255 / 0.09) inset;
         z-index: 2;
       }
 
@@ -913,6 +912,12 @@ export class ProfileView extends LitElement.with(State, Query) {
       }
 
       @media(max-width: 500px) {
+        :host {
+          position: absolute;
+          min-height: var(--content-height);
+          border-radius: 0;
+        }
+
         #hero::after {
           display: none;
         }

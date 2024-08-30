@@ -6,14 +6,13 @@ import '../components/profile-view';
 import { State, Spinner, SpinnerStyles } from '../components/mixins';
 
 import PageStyles from '../styles/page';
-import { min } from 'date-fns';
 
 const didExtractionRegex = /did:[^/?]+/
 
 export class FindPage extends LitElement.with(State, Spinner) {
 
   static properties = {
-    identities: { store: 'page', test: true },
+    identities: { store: 'page' },
     did: { type: String }
   }
 
@@ -34,6 +33,7 @@ export class FindPage extends LitElement.with(State, Spinner) {
     if (this.componentReady) {
       const did = location.pathname.match(didExtractionRegex)?.[0] || '';
       if (did && did !== this.did) {
+        this.foo = did;
         await this.startSpinner({ minimum: 1000, fixed: true });
         this.did = did;
       }

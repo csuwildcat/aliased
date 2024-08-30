@@ -3,6 +3,7 @@ import { LitElement, css, html } from 'lit'
 import './shoelace.js';
 import PageStyles from '../styles/page.js';
 
+import { App } from '../app.js';
 import { DOM } from '../utils/dom.js';
 import { DWeb } from '../utils/dweb.js';
 import { State, Query } from './mixins/index.js';
@@ -16,10 +17,6 @@ export class CreateIdentity extends LitElement.with(State, Query) {
   static query = {
     createIdentityLabel: '#create_identity_label',
     createIdentityButton: '#create_identity_button'
-  }
-
-  constructor() {
-    super()
   }
 
   render() {
@@ -36,7 +33,7 @@ export class CreateIdentity extends LitElement.with(State, Query) {
         this.createIdentityButton.loading = true;
         const identity = await DWeb.identity.create({ dwnEndpoints: ['http://localhost:3000'] });
         await DWeb.identity.addAutofillDid(label + '@' + identity.did.uri);
-        DWeb.identity.list().then(list => this.identities = list);
+        App.addIdentities(identity);
         this.createIdentityButton.loading = false;
         DOM.fireEvent(this, 'identity-created', { detail: { identity } });
       }}">
@@ -51,8 +48,7 @@ export class CreateIdentity extends LitElement.with(State, Query) {
     css`
       #create_identity_button {
         display: block;
-        width: fit-content;
-        margin: 2rem auto 0;
+        margin: 1.5rem auto 0;
       }
     `
   ]

@@ -66,6 +66,7 @@ sl-button sl-icon {
 }
 
 sl-dialog[fit-content]::part(panel) {
+  width: -moz-fit-content;
   width: fit-content;
   height: fit-content;
 }
@@ -308,6 +309,7 @@ sl-tab-group::part(tabs) {
 }
 
 @media(max-width: 500px) {
+
   .page-dialog::part(panel) {
     width: 100%;
     height: calc(100% - var(--header-height));

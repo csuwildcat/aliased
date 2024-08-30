@@ -134,12 +134,13 @@ async function getPortableDid(identity){
 
 async function importIdentity(agent, portableIdentity, manage = false){
   const uri = portableIdentity?.portableDid?.uri;
-  let exists = await agent.identity.get({ didUri: uri })
+  let exists = await agent.identity.get({ didUri: uri });
   if (!exists) {
-    await agent.identity.import({ portableIdentity });
+    let identity = await agent.identity.import({ portableIdentity });
     if (manage) {
-      await agent.identity.manage({ portableIdentity })
+      return await agent.identity.manage({ portableIdentity })
     }
+    return identity;
   }
 }
 
@@ -243,17 +244,29 @@ export const DWeb = globalThis.DWeb = {
       }
     },
     async restore (options = {}){
+      const restored = [];
       const agent = await getAgent();
       return new Promise(async (resolve, reject) => {
         if (!options.from || options.from === 'file') {
-          await Promise.all(options?.files?.map(file => {
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-              const portableIdentity = JSON.parse(e.target.result);
-              await importIdentity(agent, portableIdentity, true);
-            }
-            reader.readAsText(file);
-          })).then(resolve).catch(reject);
+          try {
+            await Promise.all(options?.files?.map(file => {
+              return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                  const portableIdentity = JSON.parse(e.target.result);
+                  const identity = await importIdentity(agent, portableIdentity, true).catch(e => console.log(e));
+                  restored.push(identity);
+                  resolve();
+                }
+                reader.readAsText(file);
+              })
+            }))
+            resolve(restored);
+          }
+          catch(e) {
+            console.log(e);
+            reject(e);
+          }
         }
         else {
           console.warn(`The mechanism to restore from ${options.from} is not yet implemented`);

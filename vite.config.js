@@ -51,9 +51,9 @@ export default defineConfig({
       },
 
       manifest: {
-        name: 'WhoDID',
-        short_name: 'whodid',
-        description: 'Lookup the DIDs of individuals and view information they publish',
+        name: 'Aliased',
+        short_name: 'aliased',
+        description: 'Decentralized identity manager',
         theme_color: '#0099F1',
       },
 

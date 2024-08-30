@@ -1,5 +1,7 @@
 import { LitElement, css, html } from 'lit'
 
+import { App } from '../app.js';
+
 import '../components/shoelace.js';
 import '@vaadin/upload';
 
@@ -39,8 +41,9 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
   async handleRestoreUpload(e) {
     if (!this.restoreUploader || !this.restoreUploader.files.length) return;
     try {
-      await DWeb.identity.restore({ from: 'file', files: this.restoreUploader.files })
-      await DWeb.identity.list().then(list => this.identities = list);
+      const restored = await DWeb.identity.restore({ from: 'file', files: this.restoreUploader.files })
+      console.log(restored);
+      await App.addIdentities(restored);
       this.restoreIdentityModal.hide();
     }
     catch(e){
@@ -50,14 +53,15 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
   }
 
   render() {
+    const identities = Object.values(this.identities || NaN);
     return html`
       <section page-section>
-        ${ !this?.identities?.length ? 
+        ${ !identities?.length ? 
           html`<connect-widget></connect-widget>` : 
           html`
             <h2>Identities</h2>
             <ul id="identity_list" limit-width>
-              ${this.identities.map(identity => html`
+              ${identities.map(identity => html`
                 <li flex="center-y">
                   
                   <a href="/profiles/${identity.did.uri}">

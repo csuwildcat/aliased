@@ -6,24 +6,19 @@ class AppChannel {
     this.name = name;
     this.sender = new BroadcastChannel(name);
     this.receiver = new BroadcastChannel(name);
-    this.store = options.store || false;
     this.receiver.addEventListener('message', (event) => {
-      if (this.store) {
-        this.data = event.data;
-      }
+      this.data = event.data;
     });
   }
 
   publish(data) {
-    if (this.store) {
-      this.data = data;
-    }
+    this.data = data;
     this.sender.postMessage(data);
   }
 
   subscribe(listener) {
     this.receiver.addEventListener('message', listener);
-    if (this.store && this.data !== null) {
+    if (this.data !== undefined) {
       listener({ data: this.data }); // Immediately send the last value if available
     }
   }
@@ -45,19 +40,16 @@ class PageChannel {
   constructor(name, options = {}) {
     this.name = name;
     this.listeners = new Set();
-    this.store = options.store || false;
   }
 
   publish(data) {
-    if (this.store) {
-      this.data = data;
-    }
+    this.data = data;
     this.listeners.forEach(listener => listener({ data }));
   }
 
   subscribe(listener) {
     this.listeners.add(listener);
-    if (this.store && this.data !== null) {
+    if (this.data !== undefined) {
       listener({ data: this.data }); // Immediately send the last value if available
     }
   }
@@ -68,15 +60,15 @@ class PageChannel {
 }
 
 export const channels = {
-  page: new Proxy(PageChannel.channels, {
-    get(target, name) {
-      return PageChannel.channels[name] || (PageChannel.channels[name] = new PageChannel(name, { store: name.startsWith('$') }));
+  page: {
+    get(name, options = {}) {
+      return PageChannel.channels[name] || (PageChannel.channels[name] = new PageChannel(name));
     }
-  }),
-  app: new Proxy(AppChannel.channels, {
-    get(target, name) {
-      return AppChannel.channels[name] || (AppChannel.channels[name] = new AppChannel(name, { store: name.startsWith('$') }));
+  },
+  app: {
+    get(name, options = {}) {
+      return AppChannel.channels[name] || (AppChannel.channels[name] = new AppChannel(name));
     }
-  })
+  }
 };
 

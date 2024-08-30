@@ -7,6 +7,8 @@ import './components/pwa-badge'
 import './components/shoelace';
 import './components/connect-widget';
 
+
+import { $App } from './app';
 import { AppRouter } from './utils/router';
 import { State, Query } from './components/mixins';
 import { DWeb } from './utils/dweb';
@@ -19,12 +21,7 @@ import './pages/find';
 import './pages/identities';
 import PageStyles from './styles/page';
 
-export class AppContainer extends LitElement.with(State, Query) {
-
-  static properties = {
-    identities: { store: 'page', test: true },
-    ready: { store: 'page' }
-  }
+export class AppView extends LitElement.with($App, State, Query) {
 
   static query = {
     connectModal: '#connect_modal',
@@ -34,7 +31,6 @@ export class AppContainer extends LitElement.with(State, Query) {
     directoryPage: '#directory',
     identitiesPage: '#identities'
   }
-
 
   constructor() {
     super()
@@ -54,28 +50,6 @@ export class AppContainer extends LitElement.with(State, Query) {
         }
       ]
     });
-
-    let ready;
-    this.ready = new Promise(resolve => ready = resolve);
-    DWeb.identity.list().then(async list => {
-      await Promise.all(list.map(async identity => {
-        const web5 = identity.web5 = await DWeb.use(identity);
-        identity.datastore = new Datastore(web5);
-      }));
-      this.identities = list;
-      this.ready.state = true;
-      ready(true);
-    })
-  }
-
-  firstUpdated() {
-
-  }
-
-  async willUpdate(props){
-    if (props.has('identities') && this.identities) { 
-
-    }
   }
 
   render() {
@@ -83,8 +57,8 @@ export class AppContainer extends LitElement.with(State, Query) {
 
       <header id="header">
         <sl-icon id="nav_toggle" name="list" @click="${e => this.nav.toggleAttribute('open')}"></sl-icon>
-        <sl-icon id="logo_icon" name="hood"></sl-icon>
-        <h1>liased</h1>
+        <sl-icon id="logo_icon" name="app-logo"></sl-icon>
+        <h1>Aliased</h1>
       </header>
 
       <nav id="nav" @click="${e => this.nav.removeAttribute('open')}">
@@ -128,8 +102,8 @@ export class AppContainer extends LitElement.with(State, Query) {
         display: flex;
         align-items: center;
         height: var(--header-height);
-        padding: 0 0.5rem;
-        background: var(--sl-color-blue-100);
+        padding: 0 0.65rem;
+        background: #17456d;
         box-shadow: 0 0 2px 2px rgba(0 0 0 / 25%);
         user-select: none;
         z-index: 2;
@@ -138,7 +112,7 @@ export class AppContainer extends LitElement.with(State, Query) {
       #nav_toggle {
         display: none;
         font-size: 1.75rem;
-        margin: 0 0 0 -1rem;
+        margin: 0 0 0 -1.3rem;
         padding: 0 0.15em 0 0;
         opacity: 0.5;
         transition: opacity 0.3s ease;
@@ -150,13 +124,16 @@ export class AppContainer extends LitElement.with(State, Query) {
       }
 
       #logo_icon {
-        margin: 0 -0.05rem -0.25rem 0;
-        font-size: 2.2rem;
+        /* Use the same hue value as the background color of the header */
+        --background-color: 208; 
+        font-size: 1.75rem;
       }
 
       #header h1 {
-        margin: 0 auto 0 0;
-        font-size: 1.65rem;
+        margin: 0 auto -0.1rem 0.2rem;
+        font-family: var(--logo-font);
+        font-size: 1.75rem;
+        font-weight: normal
       }
 
       #header sl-avatar {
@@ -219,8 +196,8 @@ export class AppContainer extends LitElement.with(State, Query) {
 
       #nav a[active] {
         opacity: 1;
-        color: rgb(122 153 255);
-        border-right: 2px solid rgb(65 110 255);
+        color: var(--sl-color-blue-700);
+        border-right: 2px solid rgb(51 117 174);
       }
 
       #nav a[active] sl-icon {
@@ -269,6 +246,8 @@ export class AppContainer extends LitElement.with(State, Query) {
         #nav a {
           flex-direction: row;
           justify-content: left;
+          height: 3rem;
+          margin: 0.5rem 0 0;
           font-size: 1rem;
         }
         #nav a > :first-child {
@@ -290,6 +269,12 @@ export class AppContainer extends LitElement.with(State, Query) {
         }
       }
 
+      @media(max-width: 500px) {
+        #pages > * {
+          padding: 0;
+        }
+      }
+
       @media (prefers-color-scheme: light) {
         a:hover {
           color: #747bff;
@@ -302,4 +287,4 @@ export class AppContainer extends LitElement.with(State, Query) {
   ]
 }
 
-customElements.define('app-container', AppContainer)
+customElements.define('app-view', AppView)

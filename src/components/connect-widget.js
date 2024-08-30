@@ -1,16 +1,13 @@
 import { LitElement, css, html } from 'lit'
 
+import { App } from '../app.js';
+
 import './shoelace';
 import PageStyles from '../styles/page.js';
 
 import { DWeb } from '../utils/dweb';
-import { State } from '../components/mixins';
 
-export class ConnectWidget extends LitElement.with(State) {
-
-  static properties = {
-    identities: { store: 'page', test: true }
-  }
+export class ConnectWidget extends LitElement {
 
   constructor() {
     super()
@@ -25,10 +22,9 @@ export class ConnectWidget extends LitElement.with(State) {
         <sl-button variant="default" size="large" @click="${ async e => {
           e.target.loading = true;
           const identity = await DWeb.identity.create({ dwnEndpoints: ['http://localhost:3000'] });
-          const portableIdentity = await identity.export();
-          this.identities = await DWeb.identity.list()
+          App.addIdentities(identity);
           e.target.loading = false;
-          router.navigateTo(`/profiles/${portableIdentity.portableDid.uri}`);
+          router.navigateTo(`/profiles/${identity.did.uri}`);
         }}">
           <sl-icon slot="prefix" name="person-plus"></sl-icon>
           Create a new identity
