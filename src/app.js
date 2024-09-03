@@ -6,6 +6,8 @@ import { DWeb } from './utils/dweb.js';
 import { State } from './components/mixins/index.js';
 import { Datastore } from './utils/datastore.js';
 
+import { natives } from './utils/helpers.js';
+
 async function initializeIdentities(list){
   const identities = {};
   list = list || await DWeb.identity.list();
@@ -14,6 +16,7 @@ async function initializeIdentities(list){
     if (identity.web5) return;
     const web5 = identity.web5 = await DWeb.use(identity);
     identity.datastore = new Datastore(web5);
+
   }));
   return identities;
 }
@@ -23,7 +26,8 @@ const $App = (superClass) => class extends superClass.with(State) {
 
   static properties = {
     ready: { store: 'page' },
-    identities: { store: 'page' }
+    identities: { store: 'page' },
+    avatars: { store: 'page' }
   }
 
   constructor(){
@@ -38,13 +42,43 @@ const $App = (superClass) => class extends superClass.with(State) {
       this.identities = identities;
       this.ready.state = true;
       ready(true);
+      //this.requestUpdate();
     });
-    this.requestUpdate();
   }
 
   async addIdentities(list){
     const identities = await initializeIdentities(Array.isArray(list) ? list : [list]);
     return this.identities = { ...this.identities, ...identities };
+  }
+
+  async putRecordForPath(did, protocol, path, data, options = {}){
+    await this.ready;
+    const identity = this.identities[did];
+    let record = options.record;
+    if (!record) {
+      const { records } = await identity.datastore.queryProtocolRecords(protocol, path, { latestRecord: true });
+      record = records[0];
+    }
+    data = data instanceof File ? new Blob([data], { type: options.dataFormat || data.type }) : data;
+    const dataFormat = data instanceof Blob ? data.type : options.dataFormat || 'application/json';
+    try {
+      if (record) {
+        await record.update({ data, dataFormat });
+        await record.send(did);
+      }
+      else {
+        record = await identity.datastore.createProtocolRecord(protocol, path, { data, dataFormat });
+      }
+    }
+    catch(e) {
+      console.log(e);
+    }
+    const drl = record.drl = natives.drl.create(did, { protocol, path });
+    const blob = record.blob = record.blob || await record.data.blob();
+    if (options.cache !== false) {
+
+    }
+    return record;
   }
 
 }

@@ -96,7 +96,7 @@ const natives = {
     create(did, { protocol = '', path = {}, params = {}, hash = '' }){
       let url = `dweb://${did}`;
       if (protocol) {
-        url += '/protocols/' + natives.url.encode(natives.unslash(protocol));
+        url += '/protocols/' + encodeURIComponent(protocol);
       }
       for (let z in path) {
         url += `/${z}/${path[z]}`
@@ -124,7 +124,7 @@ const natives = {
       const protocol = drlMatches?.[2];
       return {
         did: drlMatches?.[1] || null,
-        protocol: protocol ? natives.url.decode(protocol) : null,
+        protocol: protocol ? decodeURIComponent(protocol) : null,
         path: match.pathname.groups,
         params: Object.fromEntries(new URLSearchParams(match.search.input)),
         hash: match.hash.input
