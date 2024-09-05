@@ -78,7 +78,7 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
         <sl-button variant="primary" size="small" @click="${ e => this.lookupProfile() }" slot="suffix">Find</sl-button>
       </header>
       <section>
-        <profile-view id="profile_view" did="${this.did}" @profile-view-load-complete="${ e => this.stopSpinner() }"></profile-view>
+        <profile-view id="profile_view" did="${ifDefined(this.did)}" @profile-view-load-complete="${ e => this.stopSpinner() }"></profile-view>
       </section>
     `
   }
