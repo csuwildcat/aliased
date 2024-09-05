@@ -167,35 +167,9 @@ export const DWeb = globalThis.DWeb = {
       }
       let agentDid = await BearerDid.import({ portableDid: did })
       const agent = DWeb.agent = await Web5UserAgent.create({ agentDid });
-      const resolving = {};
-      agent.did.cache.get = async function get(did) {
-        try {
-          const str = await this.cache.get(did);
-          const cachedResult = JSON.parse(str);
-          if (!resolving[did] && Date.now() >= cachedResult.ttlMillis) {
-            resolving[did] = true;
-            const list = await agent.identity.list();
-            if (agent.agentDid.uri === did || list.find(identity => identity.did.uri === did)) {
-              agent.did.resolve(did).then(result => {
-                if (!result.didResolutionMetadata.error) {
-                  agent.did.cache.set(did, result);
-                }
-              }).finally(e => delete resolving[did])
-            }
-            else {
-              delete resolving[did];
-              this.cache.nextTick(() => this.cache.del(did));
-              return;
-            }
-          }
-          return cachedResult.value;
-        } catch(error) {
-          if (error.notFound) {
-            return;
-          }
-          throw error;
-        }
-      }
+      agent.sync.startSync({ interval: options.syncInterval || '2m' }).catch(error => {
+        console.error(`Sync failed: ${error}`);
+      });
 
       resolve(DWeb.agent);
     }))
@@ -290,9 +264,6 @@ export const DWeb = globalThis.DWeb = {
     instances[uri] = instance;
     if (options.sync !== false) {
       await agent.sync.registerIdentity({ did: uri });
-      agent.sync.startSync({ interval: options.syncInterval || '2m' }).catch(error => {
-        console.error(`Sync failed: ${error}`);
-      });
     }
     return instance;
   },

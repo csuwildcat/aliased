@@ -175,6 +175,36 @@ class Datastore {
     return response;
   }
 
+  async putRecordPath(protocol, path, data, options = {}){
+    await this.ready;
+    let record = options.record;
+    if (!record) {
+      const { records } = await this.queryProtocolRecords(protocol, path, { latestRecord: true });
+      record = records[0];
+    }
+    data = data instanceof File ? new Blob([data], { type: options.dataFormat || data.type }) : data;
+    const dataFormat = data instanceof Blob ? data.type : options.dataFormat || 'application/json';
+    try {
+      if (record) {
+        await record.update({ data, published: options.published });
+        await record.send(this.did);
+      }
+      else {
+        const createResponse = await this.createProtocolRecord(protocol, path, { data, dataFormat, published: options.published });
+        record = createResponse.record;
+      }
+    }
+    catch(e) {
+      console.log(e);
+    }
+    const drl = record.drl = natives.drl.create(this.did, { protocol: protocols[protocol].uri, path, action: 'read' });
+    const blob = record.blob = record.blob || await record.data.blob();
+    if (options.cache !== false) {
+      natives.drl.cache(drl, record, blob);
+    }
+    return record;
+  }
+
   async getAggregators(options = {}){
     options.latestRecord = true;
     const { records } = await this.queryProtocolRecords('social', 'aggregators', options)

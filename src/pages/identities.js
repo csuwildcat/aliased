@@ -1,6 +1,8 @@
-import { LitElement, css, html } from 'lit'
+import { LitElement, css, html } from 'lit';
+import { ifDefined } from 'lit/directives/if-defined.js';
 
 import { App } from '../app.js';
+import * as protocols from '../utils/protocols.js';
 
 import '../components/shoelace.js';
 import '@vaadin/upload';
@@ -31,7 +33,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
   firstUpdated() {
     if (!this.ready.state) {
-      this.startSpinner({ selector: 'section', minimum: 500, renderImmediate: true });
+      this.startSpinner({ target: 'section', minimum: 500, renderImmediate: true });
     }
     this.ready.then(() => {
       this.stopSpinner();
@@ -65,7 +67,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
                 <li flex="center-y">
                   
                   <a href="/profiles/${identity.did.uri}">
-                    <sl-avatar image="" shape="circle" size="small"></sl-avatar>
+                    <sl-avatar image="${identity.avatar || `https://dweb/${identity.did.uri}/read/protocols/${encodeURIComponent(protocols.profile.uri)}/avatar`}" shape="circle" size="small"></sl-avatar>
                     ${identity.did.uri}
                   </a>
                   <sl-button size="small" @click="${ e => DWeb.identity.backup(identity, { to: 'file' }) }">

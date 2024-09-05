@@ -82,7 +82,10 @@ const natives = {
     async cache(drl, record, blob){   
       const cache = await caches.open('drl');
       await cache.put(drl, new Response(blob || await record.data.blob(), {
-        headers: { 'Content-Type': record.dataFormat }
+        headers: {
+          'Content-Type': record.dataFormat,
+          'dwn-cache-time': Date.now().toString()
+        }
       }));
       return drl;
     },
@@ -93,14 +96,12 @@ const natives = {
       }
       return drl;
     },
-    create(did, { protocol = '', path = {}, params = {}, hash = '' }){
-      let url = `dweb://${did}`;
+    create(did, { protocol = '', action = '', path = '', params = {}, hash = '', flushCache = false }){
+      let url = `https://dweb/${did}${action ? '/' + action : '' }`;
       if (protocol) {
         url += '/protocols/' + encodeURIComponent(protocol);
       }
-      for (let z in path) {
-        url += `/${z}/${path[z]}`
-      }
+      url += natives.unslash(path.startsWith('/') ? path : '/' + path);
       const searchParams = new URLSearchParams();
       for (let key in params) {
         const value = params[key];
@@ -109,7 +110,7 @@ const natives = {
         }
         else searchParams.append(key, value);
       }
-      return url + searchParams.toString() + hash;
+      return url + searchParams.toString() + (flushCache ? '?cache-updated=' + new Date().getTime() : '') + hash;
     },
     parse(_url, pathname = '*'){
       const url = natives.unslash(_url);

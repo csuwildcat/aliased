@@ -73,7 +73,7 @@ export class AppView extends LitElement.with($App, State, Query) {
       </nav>
 
       <main id="pages">
-        <find-page id="find" page></find-page>
+        <find-page id="find" page="full-width"></find-page>
         <identities-page id="identities" page></identities-page>
       </main>
 
@@ -94,6 +94,7 @@ export class AppView extends LitElement.with($App, State, Query) {
         --header-height: 3rem;
         --nav-width: 4.5rem;
         --content-height: calc(100vh - var(--header-height));
+        --page-padding: 2.25rem;
       }
 
       #header {
@@ -140,7 +141,7 @@ export class AppView extends LitElement.with($App, State, Query) {
         --size: calc(var(--header-height) - 1rem);
       }
 
-      :host-context(html[class~="sl-scroll-lock"]) #pages {
+      :host-context(html.sl-scroll-lock) #pages {
         z-index: 3;
       } 
 
@@ -216,11 +217,11 @@ export class AppView extends LitElement.with($App, State, Query) {
         box-sizing: border-box;
         width: 100%;
         height: var(--content-height);
-        padding: 2.5em 2.25em 2em;
+        padding: var(--page-padding);
         opacity: 0;
         visibility: hidden;
         transition: visibility 0.3s, opacity 0.3s ease;
-        overflow: hidden;
+        overflow-y: clip;
         z-index: -1;
       }
 
@@ -271,6 +272,10 @@ export class AppView extends LitElement.with($App, State, Query) {
 
       @media(max-width: 500px) {
         #pages > * {
+          padding: 1.5rem 1.25rem 1rem;
+        }
+
+        #pages > [page~="full-width"] {
           padding: 0;
         }
       }

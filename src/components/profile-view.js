@@ -2,6 +2,9 @@ import { LitElement, html, css, nothing } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { format, intervalToDuration, formatDuration } from "date-fns";
 
+import { App } from '../app.js';
+
+import * as protocols from '../utils/protocols.js';
 import { hashToGradient } from '../utils/colors.js';
 import { socialApps } from '../utils/content.js';
 import { natives } from '../utils/helpers.js';
@@ -17,7 +20,6 @@ import PageStyles from '../styles/page.js';
 import './w5-img.js'
 import './detail-box.js'
 import './invite-item';
-import { th } from 'date-fns/locale';
 
 export class ProfileView extends LitElement.with(State, Query) {
 
@@ -47,7 +49,7 @@ export class ProfileView extends LitElement.with(State, Query) {
       type: Object
     },
     avatar: {
-      type: Object
+      type: String
     },
     hero: {
       type: Object
@@ -126,12 +128,11 @@ export class ProfileView extends LitElement.with(State, Query) {
 
   constructor() {
     super();
+    this.profileProtocolEncoded = encodeURIComponent(protocols.profile.uri);
     this.clearData();
   }
 
   clearData(){
-    this.avatar = {};
-    this.hero = {};
     this.social = {};
     this.career = {};
     this.socialData = {
@@ -167,24 +168,14 @@ export class ProfileView extends LitElement.with(State, Query) {
       this.heroImage.style.setProperty('--deterministic-background', hashToGradient(did.split(':')[2]));
       const records = await Promise.all([
         this.datastore.getSocial({ from: this.owner ? undefined : did }),
-        this.datastore.readProfileImage('avatar', { from: this.owner ? undefined : did }),
-        this.datastore.readProfileImage('hero', { from: this.owner ? undefined : did }),
         this.datastore.getCareer({ from: this.owner ? undefined : did }),
       ])
+      this.avatar = `https://dweb/${this.did}/read/protocols/${this.profileProtocolEncoded}/avatar`;
+      this.hero = `https://dweb/${this.did}/read/protocols/${this.profileProtocolEncoded}/hero`;
       this.social = records[0];
-      this.avatar = records[1];
-      this.hero = records[2];
-      this.career = records[3];
-      this.socialData = this.social?.cache?.json || {
-        displayName: '',
-        bio: '',
-        apps: {}
-      };
-      this.careerData = this.career?.cache?.json || {
-        jobs: [],
-        skills: [],
-        education: []
-      };
+      this.career = records[1];
+      this.socialData = this.social?.cache?.json || this.socialData;
+      this.careerData = this.career?.cache?.json || this.careerData;
       this.loadingError = false;
       this.loaded = true;
       DOM.fireEvent(this, 'profile-view-load-success')
@@ -199,8 +190,8 @@ export class ProfileView extends LitElement.with(State, Query) {
 
   async handleFileChange(type, input){
     await this.ready;
-    const file = input.files[0];
-    this[type] = await this.datastore.setProfileImage(type, file, this[type], this.did);
+    await App.updateProfileImage(this.owner, type, input.files[0]);
+    this[type] = this.owner[type];
   }
 
   async saveSocialInfo(e){
@@ -296,14 +287,14 @@ export class ProfileView extends LitElement.with(State, Query) {
 
       <section id="profile_card" flex="column fill">
 
-        <w5-img id="hero" src="${this.hero?.cache?.uri}">
+        <w5-img id="hero" src="${this.hero}">
           <sl-icon-button class="edit-button" name="pencil" size="medium" @click="${e => this.heroInput.click()}"></sl-icon-button>
           <input id="hero_input" type="file" accept="image/png, image/jpeg, image/gif" style="display: none" @change="${e => this.handleFileChange('hero', this.heroInput)}" />
         </w5-img>
 
         <div id="basic_info">
           <div id="avatar_wrapper" flex="end">
-            <w5-img id="avatar" src="${this.avatar?.cache?.uri}" fallback="${this.owner ? 'person-fill-add' : 'person-fill'}" @click="${e => this.avatarInput.click()}">
+            <w5-img id="avatar" src="${this.avatar}" fallback="${this.owner ? 'person-fill-add' : 'person-fill'}" @click="${e => this.avatarInput.click()}">
               <input id="avatar_input" type="file" accept="image/png, image/jpeg, image/gif" style="display: none" @change="${e => this.handleFileChange('avatar', this.avatarInput)}" />
             </w5-img>
             ${ !Object.keys(this.socialData?.payment || {}).length ? nothing : html`
@@ -512,7 +503,7 @@ export class ProfileView extends LitElement.with(State, Query) {
 
       <sl-dialog id="qr_modal" class="page-dialog" placement="start" fit-content>
         <sl-qr-code id="qr_code"></sl-qr-code>
-      </sl-dialog> 
+      </sl-dialog>
     `
   }
 
@@ -530,7 +521,7 @@ export class ProfileView extends LitElement.with(State, Query) {
         box-sizing: border-box;
         justify-content: center;
         flex-direction: column;
-        max-width: 700px;
+        max-width: var(--content-max-width);
         background: var(--grey);
         border-radius: var(--block-radius);
         box-shadow: var(--block-shadow);
@@ -678,6 +669,7 @@ export class ProfileView extends LitElement.with(State, Query) {
       }
 
       #tabs::part(tabs) {
+        box-sizing: border-box;
         background: rgba(0 0 0 / 15%);
         border: solid 1px var(--track-color);
         border-left: none;
@@ -685,7 +677,7 @@ export class ProfileView extends LitElement.with(State, Query) {
       }
 
       #tabs::part(active-tab-indicator) {
-        bottom: -1px;
+        bottom: 0;
       }
 
       #tabs sl-tab-panel {
@@ -913,7 +905,6 @@ export class ProfileView extends LitElement.with(State, Query) {
 
       @media(max-width: 500px) {
         :host {
-          position: absolute;
           min-height: var(--content-height);
           border-radius: 0;
         }

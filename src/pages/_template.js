@@ -4,6 +4,7 @@ import '../components/shoelace.js';
 import PageStyles from '../styles/page.js';
 
 import { State } from '../components/mixins/index.js';
+import { de } from 'date-fns/locale';
 
 export class BlankPage extends LitElement.with(State) {
 

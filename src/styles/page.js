@@ -2,6 +2,10 @@ import { css } from 'lit'
 
 export default css`
 
+:host-context(html.sl-scroll-lock) [lock-on-scroll] {
+  z-index: 0 !important;
+} 
+
 :host([page]) > * {
   margin: 0 auto;
 }
@@ -73,7 +77,7 @@ sl-dialog[fit-content]::part(panel) {
 
 sl-dialog::part(header) {
   border-bottom: 1px solid rgb(255 255 255 / 2%);
-  box-shadow: 0 1px 1px 1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 1px 1px rgba(0, 0, 0, 0.15);
 }
 
 sl-dialog::part(header-actions) {

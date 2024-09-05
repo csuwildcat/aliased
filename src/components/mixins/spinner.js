@@ -36,14 +36,14 @@ export const Spinner = (Base) => class extends Base {
     super();
     let firstUpdatedResolve;
     const original = this.firstUpdated;
-    this.#firstUpdatedPromise = new Promise(res => firstUpdatedResolve = res);
+    this.#firstUpdatedSpinnerPromise = new Promise(res => firstUpdatedResolve = res);
     this.firstUpdated = async (props) => {
       firstUpdatedResolve();
       await original?.call(this, props);
     };
   }
 
-  #firstUpdatedPromise;
+  #firstUpdatedSpinnerPromise;
 
   #spinnerTransitionEnd(e){
     if (e.propertyName === 'opacity' && getComputedStyle(e.target).opacity === '0') {
@@ -61,8 +61,8 @@ export const Spinner = (Base) => class extends Base {
 
   async startSpinner(options = { renderImmediate: false, minimum: 0, fixed: false }) {
     const styleOptions = (options.fixed ? 'fixed' : '');
-    await this.#firstUpdatedPromise;
-    const host = options.selector ? this.shadowRoot.querySelector(options.selector) : this.shadowRoot;
+    await this.#firstUpdatedSpinnerPromise;
+    const host = typeof options.target === 'string' ? this.shadowRoot.querySelector(options.target) : options.target || this.shadowRoot;
     let spinner = host.querySelector('.spinner-mixin');
     if (spinner) {
       spinner.setAttribute('spinner-show', '');
@@ -77,7 +77,7 @@ export const Spinner = (Base) => class extends Base {
   }
 
   async stopSpinner(options = {}){
-    const host = options.selector ? this.shadowRoot.querySelector(options.selector) : this.shadowRoot;
+    const host = typeof options.target === 'string' ? this.shadowRoot.querySelector(options.target) : options.target || this.shadowRoot;
     const spinner = host.querySelector('.spinner-mixin');
     await spinner?._spinnerMixinDelay;
     spinner?.removeAttribute?.('spinner-show');
