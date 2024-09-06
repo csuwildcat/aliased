@@ -25,6 +25,7 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
 
   constructor() {
     super();
+    this.path = {};
   }
 
   onRouteEnter(route, path){
@@ -39,7 +40,10 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
 
   async loadDid() {
     if (this.componentReady) {
-      const did = location.pathname.match(didExtractionRegex)?.[0] || '';
+      const did = this.path.did;
+      if (this.did && !did) {
+        router.navigateTo(`/profiles/${this.did}`);
+      }
       if (did && did !== this.did) {
         this.searchInput.value = did;
         await this.startSpinner({ minimum: 1000, fixed: true });
@@ -48,13 +52,15 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
     }
   }
 
+  async onLoadComplete() {
+    this.stopSpinner()
+  }
+
   lookupProfile(did = this.searchInput.value){
     if (!did || did === this.did) {
       return;
     }
-    this.startSpinner({ minimum: 1000, fixed: true });
     if (did !== this.path.did) {
-      this.did = did;
       router.navigateTo(`/profiles/${did}`);
     }
   }
@@ -78,7 +84,11 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
         <sl-button variant="primary" size="small" @click="${ e => this.lookupProfile() }" slot="suffix">Find</sl-button>
       </header>
       <section>
-        <profile-view id="profile_view" did="${ifDefined(this.did)}" @profile-view-load-complete="${ e => this.stopSpinner() }"></profile-view>
+        <profile-view id="profile_view" did="${ifDefined(this.did)}" @profile-view-load-complete="${this.onLoadComplete}"></profile-view>
+        <div id="placeholder" default-content="cover placeholder">
+          <sl-icon name="search"></sl-icon>
+          <p>Enter a DID above to view a profile.</p>
+        </div>
       </section>
     `
   }
@@ -104,8 +114,6 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
       #search_bar {
         position: sticky;
         top: var(--header-height);
-        left: var(--nav-width);
-        right: 0;
         height: 4.25rem;
         box-sizing: border-box;
         padding: 0.2rem 1rem 0;
@@ -135,16 +143,37 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
         opacity: 0;
         transition: opacity 0.3s;
         z-index: 0;
-        height: 3000px;
       }
 
       profile-view[loaded] {
         opacity: 1;
+        /* height: 3000px; */
+      }
+
+      #placeholder {
+        z-index: 0;
+      }
+
+        profile-view[did] ~ #placeholder {
+          opacity: 0;
+          visibility: hidden;
+          z-index: -1;
+        }
+
+      #placeholder sl-icon{
+        color: var(--sl-color-primary-600);
+      }
+
+      .spinner-mixin {
+        --inset: var(--header-height) 0 0 var(--nav-width);
       }
 
       @media(max-width: 800px) {
         #search_bar {
           left: 0;
+        }
+        .spinner-mixin {
+          --inset: var(--header-height) 0 0 0;
         }
       }
 

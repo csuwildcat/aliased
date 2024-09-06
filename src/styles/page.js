@@ -203,6 +203,7 @@ sl-tab-group::part(tabs) {
   max-width: 300px;
   height: auto;
   color: var(--header-bk);
+  transition: opacity 0.3s ease, visibility 0.3s;
 }
 
 [default-content~="firstrun"] > :is(svg, sl-icon) {

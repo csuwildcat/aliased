@@ -94,7 +94,7 @@ export class AppView extends LitElement.with($App, State, Query) {
         --header-height: 3rem;
         --nav-width: 4.5rem;
         --content-height: calc(100vh - var(--header-height));
-        --page-padding: 2.25rem;
+        --page-padding: 3rem 2.25rem;
       }
 
       #header {

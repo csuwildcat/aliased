@@ -566,7 +566,7 @@ export class ProfileView extends LitElement.with(State, Query) {
         box-sizing: border-box;
         position: absolute;
         inset: 0;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255 255 255 / 7%);
         border-bottom: var(--hero-border);
         border-radius: var(--block-radius) var(--block-radius) 0 0;
         z-index: 2;

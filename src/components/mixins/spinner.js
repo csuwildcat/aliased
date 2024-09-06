@@ -6,13 +6,14 @@ const transitionDuration = 300;
 
 export const SpinnerStyles = css`
   .spinner-mixin {
+    --inset: 0;
     position: absolute;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 3rem;
     background: var(--body-bk);
-    inset: 0;
+    inset: var(--inset);
     opacity: 0;
     transition: opacity ${transitionDuration}ms ease;
     z-index: 1000;
@@ -26,7 +27,6 @@ export const SpinnerStyles = css`
 
   .spinner-mixin[spinner-options~="fixed"] {
     position: fixed;
-    inset: 0;
   }
 `;
 
