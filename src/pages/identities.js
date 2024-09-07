@@ -33,12 +33,10 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
   constructor() {
     super();
-    this.inputCounter = 0;
     this.profileProtocolUri = encodeURIComponent(protocols.profile.uri)
   }
 
   firstUpdated() {
-
     if (!this.ready.state) {
       this.startSpinner({ target: 'section', minimum: 500, renderImmediate: true });
     }
@@ -73,35 +71,49 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
       if (!template && service.type === 'DecentralizedWebNode') {
         let endpoints = service.serviceEndpoint || [];
         endpoints = Array.isArray(endpoints) ? endpoints : [endpoints];
-        if (editing) this.identityEndpointUpdate.endpoints = [...endpoints];
+        if (editing) endpoints = this.identityEndpointUpdate.endpoints = this.identityEndpointUpdate.endpoints || [...endpoints];
         template = fn(endpoints, identity);
       }
       return template;
     }, null)
   }
 
-  showEndpointModal(identity) {
+  openEndpointModal(identity) {
     if (!this.identityEndpointUpdate || this.identityEndpointUpdate.identity !== identity) {
       this.identityEndpointUpdate = { identity };
     }
     this.modifyEndpointsModal.show();
   }
 
-  updateEndpoints() {
+  closeEndpointModal() {
+    this.modifyEndpointsModal.hide();
+  }
+
+  async updateEndpoints(autoClose) {
     if (!this.identityEndpointUpdate) return;
     const { identity, endpoints } = this.identityEndpointUpdate;
-    const did = identity.did.uri;
-    const service = identity.did.document.service.find(service => service.type === 'DecentralizedWebNode');
-    service.serviceEndpoint = endpoints;
-    DWeb.identity.update({ did, service }).then(() => {
-      this.identityEndpointUpdate = null;
-    })
+    console.log(endpoints);
+    try {
+      const result = await DWeb.did.update(identity, doc => {
+        const entry = doc.service.find(service => service.type === 'DecentralizedWebNode');
+        if (entry) {
+          entry.serviceEndpoint = endpoints.reduce((filtered, endpoint) => {
+            endpoint = endpoint.trim();
+            if (endpoint.length) filtered.push(endpoint);
+            return filtered;
+          }, []);
+        }
+        entry.serviceEndpoint = endpoints;
+      })
+      if (autoClose) this.closeEndpointModal();
+      return result;
+    }
+    catch(e){}
   }
 
   render() {
     const identities = Object.values(this.identities || {});
 
-    console.log(this.identityEndpointUpdate);
     return html`
       <section page-section>
         ${ !identities?.length ? 
@@ -131,7 +143,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
                       <h3 flex="center-y">
                         <span>Service Endpoints</span>
-                        <sl-icon-button name="pencil" variant="default" size="medium" @click="${ e => this.showEndpointModal(identity) }"></sl-icon-button>
+                        <sl-icon-button name="pencil" variant="default" size="medium" @click="${ e => this.openEndpointModal(identity) }"></sl-icon-button>
                       </h3>
                       ${this.generateEndpointItems(identity, endpoints => html`<div>${endpoints.join('<br>')}</div>`)}
                     </div>
@@ -166,7 +178,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
         ></vaadin-upload>
       </sl-dialog>
 
-      <sl-dialog id="modify_endpoints_modal" label="Modify Endpoints" placement="start">
+      <sl-dialog id="modify_endpoints_modal" label="Modify Endpoints" placement="start" @sl-after-hide="${ e => this.identityEndpointUpdate = null }">
         <div id="modify_endpoints_identity" flex="center-y">
           ${
             this.identityEndpointUpdate ?
@@ -180,10 +192,8 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
         <section>
           ${
             this.identityEndpointUpdate ? 
-              this.generateEndpointItems(this.identityEndpointUpdate.identity, (endpoints, identity) => {
-                console.log(endpoints);
+              this.generateEndpointItems(this.identityEndpointUpdate.identity, (endpoints) => {
                 return endpoints.map((endpoint, index) => {
-                  console.log(index);
                   return html`
                   <div index="${index}" class="service-endpoint-entry" flex="center-y">
 
@@ -191,7 +201,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
                       endpoints[index] = e.target.value;
                     }}"></sl-input>
 
-                    <sl-button size="small" variant="danger" @click="${ e => {
+                    <sl-button class="remove-endpoint-button" size="small" @click="${ e => {
                           endpoints.splice(index, 1)
                           this.identityEndpointUpdate = { ...this.identityEndpointUpdate };
                         }}">
@@ -199,8 +209,8 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
                       </sl-icon>
                     </sl-button>
 
-                    <sl-button size="small" variant="success" @click="${ e => {
-                        endpoints.push('')
+                    <sl-button class="add-endpoint-button" size="small" @click="${ e => {
+                        endpoints.push('');
                         this.identityEndpointUpdate = { ...this.identityEndpointUpdate };
                       }}">
                       <sl-icon slot="prefix" name="plus-lg"></sl-icon>
@@ -211,8 +221,8 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
               nothing
           }
         </section>
-        <sl-button id="close_endpoints_button" slot="footer" variant="primary" size="small" @click="${ async e => this.modifyEndpointsModal.close() }">Close</sl-button>
-        <sl-button id="submit_endpoints_button" slot="footer" variant="success" size="small" @click="${ async e => this.updateEndpoints() }">Submit</sl-button>
+        <sl-button id="close_endpoints_button" slot="footer" @click="${ async e => this.closeEndpointModal() }">Close</sl-button>
+        <sl-button id="submit_endpoints_button" slot="footer" variant="success" @click="${ async e => this.updateEndpoints(true) }">Submit</sl-button>
       </sl-dialog>
 
       
@@ -326,6 +336,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
       }
 
       .service-endpoint-input {
+        flex: 1;
         margin: 0;
       }
 
@@ -333,13 +344,25 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
         margin: 0 0 0 0.5rem;
       }
 
-      .service-endpoint-entry:not(:last-child) sl-button[variant="success"] {
+      .service-endpoint-entry sl-icon {
+        stroke: currentColor;
+      }
+
+      .service-endpoint-entry .remove-endpoint-button::part(base) {
+        color: #ff2e2e;
+      }
+
+      .service-endpoint-entry .add-endpoint-button::part(base) {
+        color: #00ba00;
+      }
+
+      .service-endpoint-entry:not(:last-child) .add-endpoint-button {
         display: none;
       }
 
       #modify_endpoints_identity sl-avatar {
         --size: 2.25rem;
-        margin: 0 0.5rem 0 0;
+        margin: 0 0.6rem 0 0;
       }
 
       #modify_endpoints_identity div {

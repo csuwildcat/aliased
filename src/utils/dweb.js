@@ -174,6 +174,32 @@ export const DWeb = globalThis.DWeb = {
       resolve(DWeb.agent);
     }))
   },
+  did: {
+    async update(identity, modifier){
+      if (!modifier) throw 'You must pass in a function that modifies a copy of the DID Document, or an already modified DID Document.';
+      if (typeof identity === 'string') {
+        const agent = await getAgent();
+        identity = await agent.identity.get({ didUri: identity });
+      }
+      let currentDoc = identity.did.document;
+      let updatedDoc = modifier;
+      if (typeof modifier === 'function') {
+        updatedDoc = structuredClone(identity.did.document);
+        await modifier(updatedDoc);
+      }
+      identity.did.document = updatedDoc;
+      try {
+        const result = await DidDht.publish({ did: identity.did });
+        console.log(result);
+        return result;
+      }
+      catch(e) {
+        console.log(e);
+        identity.did.document = currentDoc;
+        throw 'Failed to update DID Document';
+      }
+    }
+  },
   identity: {
     async create (options = {}){
       const agent = await getAgent();
