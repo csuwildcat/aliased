@@ -24,6 +24,11 @@ export default css`
   max-width: var(--content-max-width);
 }
 
+h2,h3,h4,h5,h6 {
+  font-family: var(--app-font);
+  font-weight: normal;
+}
+
 ul, ol {
   margin: 0;
   padding: 0;
@@ -64,9 +69,14 @@ sl-button::part(base) {
   align-items: center;
 }
 
-sl-button sl-icon { 
+sl-button:not([circle]) sl-icon { 
   font-size: 1rem;
   padding: 0.4rem 0;
+}
+
+sl-dialog::part(panel) {
+  width: calc(100% - 1rem);
+  max-width: 600px;
 }
 
 sl-dialog[fit-content]::part(panel) {
@@ -94,6 +104,11 @@ sl-dialog[tabbed]:has(sl-tab-group)::part(body) {
 
 sl-dialog[tabbed] sl-tab-panel::part(base) {
   padding: 1rem 1rem 1.5rem;
+}
+
+sl-dialog::part(footer) {
+  border-top: 1px solid rgba(255 255 255 / 5%);
+  box-shadow: 0 -1px 1px 0px rgba(0 0 0 / 15%);
 }
 
 sl-tab-group::part(tabs) {
@@ -229,7 +244,7 @@ sl-tab-group::part(tabs) {
 }
 
 .text-logo {
-  font-family: var(--logo-font);
+  font-family: var(--app-font);
 }
 
 [break-text] {

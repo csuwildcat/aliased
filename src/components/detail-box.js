@@ -2,7 +2,7 @@
 import { LitElement, html, css } from 'lit';
 
 import { DOM } from '../utils/dom.js';
-import { Query } from '../components/mixins';
+import { Query } from './mixins';
 
 export class DetailBox extends LitElement.with(Query) {
   static styles = [
@@ -11,6 +11,11 @@ export class DetailBox extends LitElement.with(Query) {
         display: block;
         max-height: 10em;
         transition: max-height 0.3s ease;
+        overflow: hidden;
+      }
+
+      #content {
+        box-sizing: border-box;
         overflow: hidden;
       }
 
@@ -71,7 +76,8 @@ export class DetailBox extends LitElement.with(Query) {
   ]
 
   static properties = {
-    open: { type: Boolean, reflect: true }
+    open: { type: Boolean, reflect: true },
+    hideToggle: { type: Boolean, attribute: 'hide-toggle' }
   }
 
   static query = {
@@ -79,6 +85,7 @@ export class DetailBox extends LitElement.with(Query) {
   }
 
   firstUpdated(){
+    
     DOM.addEventDelegate('click', '[detail-box-toggle]', e => {
       this.toggle();
     }, { container: this })
@@ -103,17 +110,19 @@ export class DetailBox extends LitElement.with(Query) {
 
   updated(changedProperties) {
     if (changedProperties.has('open')) {
+      const scrollHeight = this.content.scrollHeight;
       if (this.open) {
-        if (this.offsetHeight < this.content.scrollHeight) {
-          this.style.maxHeight = this.content.scrollHeight + 'px';
+        if (this.offsetHeight < scrollHeight) {
+          this.style.maxHeight = scrollHeight + 'px';
         }
       }
       else {
-        this.style.maxHeight = this.content.scrollHeight + 'px';
+        this.style.maxHeight = scrollHeight + 'px';
         const scroll = this.scrollHeight;
         this.style.removeProperty('max-height');
       }
     }
+    super.updated(changedProperties);
   }
 
   toggle() {
@@ -123,7 +132,7 @@ export class DetailBox extends LitElement.with(Query) {
   render(){
     return html`
       <section id="content" part="content"><slot></slot></section>
-      <div id="toggle" part="toggle" detail-box-toggle></div>
+      ${ this.hideToggle ? '' : html`<div id="toggle" part="toggle" detail-box-toggle></div>` }
     `
   }
 

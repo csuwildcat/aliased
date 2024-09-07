@@ -132,7 +132,7 @@ export class AppView extends LitElement.with($App, State, Query) {
 
       #header h1 {
         margin: 0 auto -0.1rem 0.2rem;
-        font-family: var(--logo-font);
+        font-family: var(--app-font);
         font-size: 1.75rem;
         font-weight: normal
       }

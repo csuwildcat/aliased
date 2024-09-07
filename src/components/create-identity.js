@@ -6,7 +6,7 @@ import PageStyles from '../styles/page.js';
 import { App } from '../app.js';
 import { DOM } from '../utils/dom.js';
 import { DWeb } from '../utils/dweb.js';
-import { State, Query } from './mixins/index.js';
+import { State, Query } from './mixins';
 
 export class CreateIdentity extends LitElement.with(State, Query) {
 

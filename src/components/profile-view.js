@@ -13,7 +13,7 @@ import { notify } from '../utils/notifications.js';
 
 
 import './shoelace.js';
-import { State, Query } from '../components/mixins';
+import { State, Query } from './mixins';
 
 import PageStyles from '../styles/page.js';
 
@@ -347,7 +347,8 @@ export class ProfileView extends LitElement.with(State, Query) {
             <div class="section-content" empty-text="Add social links" ?empty="${!Object.values(this.socialData.apps || {}).length}">
               ${Object.entries(this.socialData.apps).map(app => {
                 const name = app[0];
-                return app[1] ? html`<sl-icon-button name="${socialApps[name].icon || name}" target="_blank" href="${socialApps[name].profileUrl + app[1]}"></sl-icon-button>` : nothing;
+                const map = socialApps[name];
+                return app[1] ? html`<sl-icon-button name="${map?.icon || name}" target="_blank" href="${map?.profileUrl ? map.profileUrl + app[1] : `https://${name}.com/${app[1]}` }"></sl-icon-button>` : nothing;
               })}
             </div>
           </section>  
