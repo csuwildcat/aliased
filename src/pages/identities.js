@@ -49,8 +49,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
     if (!this.restoreUploader || !this.restoreUploader.files.length) return;
     try {
       const restored = await DWeb.identity.restore({ from: 'file', files: this.restoreUploader.files })
-      console.log(restored);
-      await App.addIdentities(restored);
+      if (restored) await App.addIdentities(restored);
       this.restoreIdentityModal.hide();
     }
     catch(e){

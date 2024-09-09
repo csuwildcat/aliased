@@ -136,6 +136,9 @@ const profileDefinition = {
     payment: {
       dataFormats: ['application/json']
     },
+    connect: {
+      dataFormats: ['application/json']
+    },
     avatar: {
       dataFormats: ['image/gif', 'image/png', 'image/jpeg']
     },
@@ -152,7 +155,8 @@ const profileDefinition = {
     messaging: {},
     address: {},
     phone: {},
-    payment: {}
+    payment: {},
+    connect: {}
   }
 }
 

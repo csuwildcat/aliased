@@ -3,9 +3,11 @@ import { Web5 } from '@web5/api';
 import { DidJwk, DidDht, BearerDid } from '@web5/dids';
 import { DwnRegistrar } from '@web5/agent';
 import { Web5UserAgent } from '@web5/user-agent';
+import { ca } from 'date-fns/locale';
 
 let initialize;
 const instances = {};
+const didLabelRegex = /(?:[^@]*@)?(did:[a-z0-9]+:[a-zA-Z0-9-]+)/;
 const storage = {
   get: (key, _default) => {
     let value = JSON.parse(localStorage.getItem('web5:' + key));
@@ -53,17 +55,15 @@ function getUserDidOptions(endpoints){
 
 async function registerEndpoints(agent, identity, dwnEndpoints = [], registration){
   try {
-    for (const dwnEndpoint of dwnEndpoints) {
-      // check if endpoint needs registration
-      const serverInfo = await agent.rpc.getServerInfo(dwnEndpoint);
+    for (const endpoint of dwnEndpoints) {
+      const serverInfo = await agent.rpc.getServerInfo(endpoint);
       if (serverInfo.registrationRequirements.length === 0) {
-        // no registration required
         continue;
       }
-      // register the agent DID
-      await DwnRegistrar.registerTenant(dwnEndpoint, agent.agentDid.uri);
-      // register the connected Identity DID
-      await DwnRegistrar.registerTenant(dwnEndpoint, identity.did.uri);
+      // register agent DID
+      await DwnRegistrar.registerTenant(endpoint, agent.agentDid.uri);
+      // register connected Identity DID
+      await DwnRegistrar.registerTenant(endpoint, identity.did.uri);
     }
     registration.onSuccess();
   } catch(error) {
@@ -83,45 +83,40 @@ function triggerDownload(filename, data, type = 'application/json'){
   URL.revokeObjectURL(url);
 }
 
+const inputTypes = { email: 'email', password: 'password' };
 async function triggerForm(fields, element = document.body) {
-  new Promise(resolve => {
-    const iframe = document.createElement('iframe');
-    iframe.src = location.origin;
-    iframe.style.position = 'fixed';
-    iframe.style.top = '0';
-    iframe.style.left = '0';
-    iframe.style.width = '1px';
-    iframe.style.height = '1px';
-    iframe.style.zIndex = '-1000';
-
-    iframe.addEventListener('load', function() {
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-
-      const form = iframeDoc.createElement('form');
-      form.action = '#';
-      form.method = 'POST';
-
-      for (let field in fields) {
-        const input = iframeDoc.createElement('input');
-        input.type = 'text';
-        input.name = field;
-        input.value = fields[field];
-        input.autocomplete = field === 'password' ? 'current-password' : field;
-        form.append(input);
-      }
-
-      iframeDoc.body.append(form);
-      form.submit();
-
-      setTimeout(() => {
+  return new Promise(resolve => {
+    const iframe = createHiddenFrame({
+      appendTo: element,
+      srcdoc: `<body>${
+        Object.keys(fields).reduce((html, field) => {
+          const autocomplete = field === 'password' ? 'current-password' : field;
+          return html + `<input type="${inputTypes[field] || 'text'}" name="${field}" value="${fields[field]}" autocomplete="${autocomplete}">`;
+        }, '<form action="#" method="POST">') + '</form>'
+      }<script>document.forms[0].submit();</script></body>`,
+      onLoad: setTimeout(() => {
         iframe.remove();
         resolve();
-      }, 100);
-
-    }, { once: true });
-
-    element.append(iframe);
+      }, 100)
+    })
   });
+}
+
+function createHiddenFrame(options = {}){
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.top = '0';
+  iframe.style.left = '0';
+  iframe.style.width = '1px'; 
+  iframe.style.height = '1px';
+  iframe.style.zIndex = '-1000';
+  if (options.onLoad) {
+    iframe.addEventListener('load', options.onLoad, { once: true });
+  }
+  if (options.src) iframe.src = options.src;
+  else if (options.srcdoc) iframe.srcdoc = options.srcdoc;
+  if (options.appendTo) options.appendTo.append(iframe);
+  return iframe;
 }
 
 async function getAgent(){
@@ -190,11 +185,9 @@ export const DWeb = globalThis.DWeb = {
       identity.did.document = updatedDoc;
       try {
         const result = await DidDht.publish({ did: identity.did });
-        console.log(result);
         return result;
       }
       catch(e) {
-        console.log(e);
         identity.did.document = currentDoc;
         throw 'Failed to update DID Document';
       }
@@ -226,7 +219,6 @@ export const DWeb = globalThis.DWeb = {
       // redo this to use the agent.identity.get(uri)
       // const agent = await getAgent();
       // const result = await agent.identity.get({ didUri: uri })
-      // console.log(result, await this.list())
       // return result;
       const identities = await this.list();
       return identities.find(identity => identity.did.uri === uri);
@@ -255,7 +247,7 @@ export const DWeb = globalThis.DWeb = {
                 reader.onload = async (e) => {
                   const portableIdentity = JSON.parse(e.target.result);
                   const identity = await importIdentity(agent, portableIdentity, true).catch(e => console.log(e));
-                  restored.push(identity);
+                  if (identity) restored.push(identity);
                   resolve();
                 }
                 reader.readAsText(file);
@@ -264,7 +256,6 @@ export const DWeb = globalThis.DWeb = {
             resolve(restored);
           }
           catch(e) {
-            console.log(e);
             reject(e);
           }
         }
@@ -296,5 +287,49 @@ export const DWeb = globalThis.DWeb = {
   dispose(instance){
     (instance?.agent || instance).sync.stopSync();
     delete instances[instance.connectedDid];
+  },
+  connect: {
+    fromInput(input, config = {}){
+      input.addEventListener('input', async e => {
+        const input = e.target;
+        const did = input.value?.match?.(didLabelRegex)?.[1];
+        if (did && !input.hasAttribute('dweb-connect-active')) {
+          input.setAttribute('dweb-connect-active');
+          try {
+            const request = DWeb.connect.webWallet(did, config.permissions)
+            config?.onRequest?.(request);
+            const connection = await request;
+            config.onConnect(connection);
+          }
+          catch(e) {
+            config?.onError?.(e);
+          }
+        }
+      })
+    },
+    async webWallet(did, options = {}){
+      new Promise(async (resolve, reject) => {
+        const connectDetails = await fetch(`https://dweb/${did}/read/protocols/${encodeURIComponent('https://areweweb5yet.com/protocols/profile')}/connect`).then(res => res.json());
+        const wallets = connectDetails?.webWallets;
+        if (!wallets?.length) reject(`No wallets found for ${did}`);
+        Promise.race(wallets.reduce(domain => {
+          const url = new URL(domain);
+          if (url.protocol.match('http')) {
+            const iframe = createHiddenFrame({
+              appendTo: document.body,
+              src: url.origin + '/dweb-connect',
+              onLoad: () => {
+                window.addEventListener('message', e => {
+                  if (e.origin === url.origin && e.data.type === 'dweb-connect-response') {
+                    resolve(e.data);
+                  }
+                });
+                iframe.contentWindow.postMessage({ type: 'dweb-connect-request', did, options }, url.origin);
+              }
+            });
+          }
+        }, []))
+      })
+    }
   }
 }
