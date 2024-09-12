@@ -56,9 +56,9 @@ form[loading] sl-textarea::part(textarea) {
   font-size: 0.75em;
 }
 
-sl-input, sl-textarea, vaadin-combo-box {
+/* sl-input, sl-textarea, vaadin-combo-box {
   margin: 0 0 1em;
-}
+} */
 
 sl-icon::part(svg) {
   width: 1em;
@@ -283,6 +283,13 @@ sl-tab-group::part(tabs) {
   font-size: 85%;
   color: rgba(255,255,255,0.5);
   font-style: italic;
+}
+
+[columns="2"] {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem 2rem;  /* Adjusts spacing between rows and columns */
+  align-items: center;
 }
 
 .shadow-icon {

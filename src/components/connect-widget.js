@@ -34,15 +34,7 @@ export class ConnectWidget extends LitElement {
           <sl-icon slot="prefix" name="wallet2"></sl-icon>
           Connect via Wallet
         </sl-button>
-        <sl-button variant="default" size="large" @click="${ async e => {
-          try {
-            const portableIdentity = await DWeb.identity.restore({ from: 'file' });
-            this.identity = portableIdentity;
-          }
-          catch(e) {
-            console.log(e)
-          }
-        }}">
+        <sl-button variant="default" size="large" @click="${ e => DOM.fireEvent(this, 'show-restore-identity-modal') }">
           <sl-icon slot="prefix" name="upload"></sl-icon>
           Restore from File
         </sl-button>
@@ -59,7 +51,16 @@ export class ConnectWidget extends LitElement {
     PageStyles,
     css`
       :host {
-        
+        display: flex;
+        justify-content: center;
+      }
+
+      sl-button {
+        width: 100%;
+      }
+
+      sl-button + sl-button {
+        margin: 1rem 0 0;
       }
 
       @media(max-width: 800px) {

@@ -165,13 +165,12 @@ class Datastore {
     if (options.recipient) params.message.recipient = options.recipient;
     if (options.role) params.message.protocolRole = options.role;
     const response = await this.dwn.records.create(params);
-    console.log('create status', response.status);
+    console.log('create status', response);
     if (options.store !== false) await response.record.send(options.from || this.did).then(e => {
-      console.log('sent success', response.record);
+      console.log('sent success', response);
     }).catch(e => {
       console.log('send error', e)
     });
-    console.log(response.record);
     return response;
   }
 
@@ -202,6 +201,16 @@ class Datastore {
     if (options.cache !== false) {
       natives.drl.cache(drl, record, blob);
     }
+    return record;
+  }
+
+  async readRecordPath(protocol, path, options = {}) {
+    await this.ready;
+    options.latestRecord = true;
+    const { records, status } = await this.queryProtocolRecords(protocol, path, options)
+    const record = records[0];
+    if (!record) return;
+    if (options.cache !== false) await cacheJson(record)
     return record;
   }
 
@@ -242,7 +251,7 @@ class Datastore {
   async createSocial(options = {}) {
     const { record, status } = await this.createProtocolRecord('profile', 'social', {
       published: true,
-      data: options.data,
+      data: options.data || {},
       dataFormat: 'application/json'
     })
     if (options.cache !== false) await cacheJson(record)

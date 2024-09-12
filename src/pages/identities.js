@@ -25,9 +25,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
   static query = {
     createIdentityButton: '#create_identity_button',
     createIdentityModal: ['#create_identity_modal', true],
-    restoreIdentityModal: ['#restore_identity_modal', true],
     restoreIdentityButton: '#restore_identity_button',
-    restoreUploader: ['#restore_uploader', true],
     modifyEndpointsModal: ['#modify_endpoints_modal', true]
   }
 
@@ -37,25 +35,25 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
   }
 
   firstUpdated() {
+    DWeb.connect.fromInput(this.renderRoot.querySelector('#test'), {
+      onConnect: async (did) => {
+        console.log(did);
+      },
+      onError: (e) => {
+        console.log(e);
+      },
+      onProgress: (p) => {  
+        console.log(p);
+      }
+    });
+
+
     if (!this.ready.state) {
       this.startSpinner({ target: 'section', minimum: 500, renderImmediate: true });
     }
     this.ready.then(() => {
       this.stopSpinner();
     })
-  }
-
-  async handleRestoreUpload(e) {
-    if (!this.restoreUploader || !this.restoreUploader.files.length) return;
-    try {
-      const restored = await DWeb.identity.restore({ from: 'file', files: this.restoreUploader.files })
-      if (restored) await App.addIdentities(restored);
-      this.restoreIdentityModal.hide();
-    }
-    catch(e){
-      console.log(e);
-    }
-    this.restoreUploader.files = [];
   }
 
   toggleIdentityDetails(e){
@@ -116,7 +114,10 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
     return html`
       <section page-section>
         ${ !identities?.length ? 
-          html`<connect-widget></connect-widget>` : 
+          html`
+            <connect-widget></connect-widget>
+            <input id="test" type="text" name="email" autocomplete="on" placeholder="Enter a DID" />
+          ` : 
           html`
             <h2>Identities</h2>
             <ul id="identity_list" limit-width>
@@ -135,13 +136,20 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
                   </div>
                   <detail-box hide-toggle>
                     <div>
-                      <h3>Actions</h3>
-                      <sl-button size="small" @click="${ e => DWeb.identity.backup(identity, { to: 'file' }) }">
-                        <sl-icon slot="prefix" name="download"></sl-icon> Backup
-                      </sl-button>
+                      <div columns="2">
+                        <span>Identity Label</span>
+                        <div><sl-input size="small" value="${identity.label}" autocomplete="off" placeholder="Ex: social, career, family"></sl-input></div>
+
+                        <span>Backup</span>
+                        <div>
+                          <sl-button size="small" @click="${ e => DWeb.identity.backup(identity, { to: 'file' }) }">
+                            <sl-icon slot="prefix" name="download"></sl-icon> Download identity backup
+                          </sl-button>
+                        </div>
+                      </div>
 
                       <h3 flex="center-y">
-                        <span>Service Endpoints</span>
+                        <span>Datastore Locations</span>
                         <sl-icon-button name="pencil" variant="default" size="medium" @click="${ e => this.openEndpointModal(identity) }"></sl-icon-button>
                       </h3>
                       ${this.generateEndpointItems(identity, endpoints => html`<div>${endpoints.join('<br>')}</div>`)}
@@ -151,10 +159,10 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
               `})}
             </ul>
             <div id="create_restore_buttons" flex="center-x center-y">
-              <sl-button id="create_identity_button" variant="success" size="small" @click="${ async e => this.createIdentityModal.show() }">
+              <sl-button id="create_identity_button" variant="success" size="small" @click="${ e => this.createIdentityModal.show() }">
                 <sl-icon slot="prefix" name="person-plus"></sl-icon> Create an Identity
               </sl-button>
-              <sl-button id="restore_identity_button" variant="primary" size="small" @click="${ async e => this.restoreIdentityModal.show() }">
+              <sl-button id="restore_identity_button" variant="primary" size="small" @click="${ e => DOM.fireEvent(this, 'show-restore-identity-modal') }">
                 <sl-icon slot="prefix" name="person-up"></sl-icon> Restore an Identity
               </sl-button>
             </div>
@@ -164,17 +172,6 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
       <sl-dialog id="create_identity_modal" label="Create an Identity" placement="start" fit-content>
         <create-identity @identity-created="${e => this.createIdentityModal.hide() }"></create-identity>
-      </sl-dialog>
-
-      <sl-dialog id="restore_identity_modal" label="Restore an Identity" placement="start" fit-content>
-        <p>Upload or drop in a backup file to restore an identity.</p>
-        <vaadin-upload
-          id="restore_uploader"
-          no-auto
-          max-files="1"
-          accept="text/json,application/json,.json"
-          @files-changed="${this.handleRestoreUpload}"
-        ></vaadin-upload>
       </sl-dialog>
 
       <sl-dialog id="modify_endpoints_modal" label="Modify Endpoints" placement="start" @sl-after-hide="${ e => this.identityEndpointUpdate = null }">
@@ -276,9 +273,9 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
       #identity_list detail-box > :first-child {
         margin-bottom: 1rem;
-        padding: 0 0.85rem 1rem;
-        background: rgba(255 255 255 / 4%);
-        border: 1px solid rgba(255 255 255 / 5%);
+        padding: 1.2rem 1.1rem;
+        background: rgb(183 192 254 / 4%);
+        border: 1px solid rgb(183 192 254 / 9%);
         border-radius: 5px;
       }
 
@@ -286,10 +283,6 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
         margin: 1.75rem 0 1rem;
         border-bottom: 1px solid rgba(255 255 255 / 8%);
         padding: 0 0 0.25rem;
-      }
-
-      #identity_list detail-box h3:first-of-type {
-        margin-top: 0.75rem
       }
 
       #identity_list detail-box h3 :not(span) {
@@ -302,26 +295,6 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
       #create_restore_buttons sl-button {
         margin: 0 0.5rem;
-      }
-      
-    /* Restore Identity Dialog */
-
-      vaadin-upload {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 8rem;
-        border: 2px dashed rgba(255,255,255,0.2);
-      }
-
-      vaadin-upload::part(drop-label) {
-        color: #fff;
-      }
-
-      vaadin-upload vaadin-button {
-        color: #fff;
-        background: var(--_lumo-button-primary-background);
-        cursor: pointer;
       }
 
     /* Modify Endpoints Dialog */
@@ -356,7 +329,8 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
       }
 
       .service-endpoint-entry:not(:last-child) .add-endpoint-button {
-        display: none;
+        visibility: hidden;
+        pointer-events: none;
       }
 
       #modify_endpoints_identity sl-avatar {

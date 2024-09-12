@@ -24,12 +24,14 @@ import PageStyles from './styles/page';
 export class AppView extends LitElement.with($App, State, Query) {
 
   static query = {
-    connectModal: '#connect_modal',
-    nav: '#nav',
-    pages: '#pages',
-    profilePage: '#profile',
-    directoryPage: '#directory',
-    identitiesPage: '#identities'
+    connectModal: ['#connect_modal', true],
+    nav: ['#nav', true],
+    pages: ['#pages', true],
+    profilePage: ['#profile', true],
+    directoryPage: ['#directory', true],
+    identitiesPage: ['#identities', true],
+    restoreIdentityModal: ['#restore_identity_modal', true],
+    restoreUploader: ['#restore_uploader', true],
   }
 
   constructor() {
@@ -50,6 +52,21 @@ export class AppView extends LitElement.with($App, State, Query) {
         }
       ]
     });
+
+    window.addEventListener('show-restore-identity-modal', e => this.restoreIdentityModal.show());
+  }
+
+  async handleRestoreUpload(e) {
+    if (!this.restoreUploader || !this.restoreUploader.files.length) return;
+    try {
+      const restored = await DWeb.identity.restore({ from: 'file', files: this.restoreUploader.files })
+      if (restored) await App.addIdentities(restored);
+      this.restoreIdentityModal.hide();
+    }
+    catch(e){
+      console.log(e);
+    }
+    this.restoreUploader.files = [];
   }
 
   render() {
@@ -79,6 +96,17 @@ export class AppView extends LitElement.with($App, State, Query) {
 
       <sl-dialog id="connect_modal" label="Connect" placement="start" fit-content ?open="${this?.connectModal?.open && this.identity && false}">
         <connect-widget></connect-widget>
+      </sl-dialog>
+
+      <sl-dialog id="restore_identity_modal" label="Restore an Identity" placement="start" fit-content>
+        <p>Upload or drop in a backup file to restore an identity.</p>
+        <vaadin-upload
+          id="restore_uploader"
+          no-auto
+          max-files="1"
+          accept="text/json,application/json,.json"
+          @files-changed="${this.handleRestoreUpload}"
+        ></vaadin-upload>
       </sl-dialog>
 
       <pwa-badge></pwa-badge>
@@ -233,6 +261,26 @@ export class AppView extends LitElement.with($App, State, Query) {
         z-index: 0;
         visibility: visible;
         overflow: visible;
+      }
+
+      /* Restore Identity Dialog */
+
+      vaadin-upload {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 8rem;
+        border: 2px dashed rgba(255,255,255,0.2);
+      }
+
+      vaadin-upload::part(drop-label) {
+        color: #fff;
+      }
+
+      vaadin-upload vaadin-button {
+        color: #fff;
+        background: var(--_lumo-button-primary-background);
+        cursor: pointer;
       }
 
       @media(max-width: 800px) {

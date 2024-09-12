@@ -3,17 +3,32 @@ import { DWeb } from './utils/dweb.js';
 import { State } from './components/mixins/index.js';
 import { Datastore } from './utils/datastore.js';
 
-import { natives } from './utils/helpers.js';
-
 async function initializeIdentities(list){
   const identities = {};
+  const startupTasks = [];
   list = list || await DWeb.identity.list();
   await Promise.all(list.map(async identity => {
     identities[identity.did.uri] = identity;
     if (identity.web5) return;
     const web5 = identity.web5 = await DWeb.use(identity);
-    identity.datastore = new Datastore(web5);
+    const datastore = identity.datastore = new Datastore(web5);
+    startupTasks.push(datastore.readRecordPath('profile', 'connect').then(async record => {
+      if (record) {
+        const data = record.cache.json || {};
+        const wallets = data?.webWallets || (data.webWallets = []);
+        if (wallets.find(url => new URL(url).origin === location.origin)) return;
+        else {
+          wallets.push(location.origin);
+          await record.update({ data, published: true });
+          if (navigator.onLine) await record.send();
+        }
+      }
+      else {
+        record = await datastore.putRecordPath('profile', 'connect', { webWallets: [location.origin] }, { published: true });
+      }
+    }).catch(e => console.error(e)));
   }));
+  Promise.allSettled(startupTasks).then(() => App.updateState('identities')).catch(e => console.error(e));
   return identities;
 }
 
