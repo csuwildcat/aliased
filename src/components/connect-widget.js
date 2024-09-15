@@ -24,7 +24,7 @@ export class ConnectWidget extends LitElement.with(State, Query, Spinner) {
   }
 
   firstUpdated() {
-    DWeb.connect.fromInput(this.selectDidInput, {
+    DWeb.connect.attachInput(this.selectDidInput, {
       permissions: [
         {
           protocolDefinition : protocols.profile.definition,

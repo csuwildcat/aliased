@@ -3,7 +3,6 @@ import { Web5 } from '@web5/api';
 import { DidJwk, DidDht, BearerDid } from '@web5/dids';
 import { DwnRegistrar } from '@web5/agent';
 import { Web5UserAgent } from '@web5/user-agent';
-import { ca } from 'date-fns/locale';
 
 let initialize;
 let connectInstance;
@@ -414,28 +413,37 @@ export const DWeb = globalThis.DWeb = {
         connectInstance = null;
       }
     },
-    fromInput(element, options = {}){
-      element.addEventListener(options.event || 'change', async e => {
-        const input = e.target.closest('input') || e.composedPath().find(el => el.tagName === 'INPUT') || element;
-        const did = input.value?.match?.(didLabelRegex)?.[1];
-        if (!did) options?.onError?.('Invalid DID');
-        else {
-          if (connectInstance) connectInstance.window.focus();
+    attachInput(element, options = {}){
+      if (element.__dweb_connect__) return;
+      const settings = element.__dweb_connect__ = {
+        event: options.event || 'change',
+        listener: async e => {
+          const input = e.target.closest('input') || e.composedPath().find(el => el.tagName === 'INPUT') || element;
+          const did = input.value?.match?.(didLabelRegex)?.[1];
+          if (!did) options?.onError?.('Invalid DID');
           else {
-            element.setAttribute('dweb-connect-active', '');
-            try {
-              const connection = await DWeb.connect.webWallet(did, e, options);
-              options?.onConnect?.(did, connection);
+            if (connectInstance) connectInstance.window.focus();
+            else {
+              element.setAttribute('dweb-connect-active', '');
+              try {
+                const connection = await DWeb.connect.webWallet(did, e, options);
+                options?.onConnect?.(did, connection);
+              }
+              catch(e) {
+                options?.onError?.(e);
+              }
+              element.removeAttribute('dweb-connect-active');
             }
-            catch(e) {
-              options?.onError?.(e);
-            }
-            element.removeAttribute('dweb-connect-active');
           }
         }
-      }, { capture: true })
+      }
+      element.addEventListener(settings.event, settings.listener)
     },
-
+    detachInput(element){
+      if (!element.__dweb_connect__) return;
+      element.removeEventListener(element.__dweb_connect__.event, element.__dweb_connect__.listener)
+      delete element.__dweb_connect__;
+    },
     async webWallet(did, event, options = {}){
       const maxLoadTime = 10000;
       return new Promise(async (resolve, reject) => {
