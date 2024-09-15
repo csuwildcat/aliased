@@ -15,7 +15,7 @@ cleanupOutdatedCaches()
 let allowlist
 // in dev mode, we disable precaching to avoid caching issues
 if (import.meta.env.DEV)
-  allowlist = [/^\/$/]
+  allowlist = [/.*/] //[/^\/$/]
 
 // to allow work offline
 registerRoute(new NavigationRoute(

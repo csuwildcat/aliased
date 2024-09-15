@@ -12,11 +12,11 @@ import { $App } from './app';
 import { AppRouter } from './utils/router';
 import { State, Query } from './components/mixins';
 import { DWeb } from './utils/dweb';
-import { Datastore } from './utils/datastore';
 
 import { activatePolyfills } from '@web5/api';
 activatePolyfills();
 
+import './pages/connect';
 import './pages/find';
 import './pages/identities';
 import PageStyles from './styles/page';
@@ -27,6 +27,7 @@ export class AppView extends LitElement.with($App, State, Query) {
     connectModal: ['#connect_modal', true],
     nav: ['#nav', true],
     pages: ['#pages', true],
+    connectPage: ['#connect', true],
     profilePage: ['#profile', true],
     directoryPage: ['#directory', true],
     identitiesPage: ['#identities', true],
@@ -49,11 +50,13 @@ export class AppView extends LitElement.with($App, State, Query) {
         {
           path: '/profiles(/)?:did?',
           component: '#find'
-        }
+        },
+        {
+          path: '/dweb-connect(/.*)?',
+          component: '#connect'
+        },
       ]
     });
-
-    window.addEventListener('show-restore-identity-modal', e => this.restoreIdentityModal.show());
   }
 
   async handleRestoreUpload(e) {
@@ -73,12 +76,12 @@ export class AppView extends LitElement.with($App, State, Query) {
     return html`
 
       <header id="header">
-        <sl-icon id="nav_toggle" name="list" @click="${e => this.nav.toggleAttribute('open')}"></sl-icon>
+        <sl-icon id="nav_toggle" name="list" @click="${e => this.nav?.toggleAttribute('open')}"></sl-icon>
         <sl-icon id="logo_icon" name="app-logo"></sl-icon>
         <h1>Aliased</h1>
       </header>
 
-      <nav id="nav" @click="${e => this.nav.removeAttribute('open')}">
+      <nav id="nav" @click="${e => this.nav?.removeAttribute('open')}">
         <a href="/" ?active="${location.pathname === '/'}">
           <sl-icon slot="prefix" name="people"></sl-icon>
           My IDs
@@ -92,6 +95,7 @@ export class AppView extends LitElement.with($App, State, Query) {
       <main id="pages">
         <find-page id="find" page="full-width"></find-page>
         <identities-page id="identities" page></identities-page>
+        <connect-page id="connect" page></connect-page>
       </main>
 
       <sl-dialog id="connect_modal" label="Connect" placement="start" fit-content ?open="${this?.connectModal?.open && this.identity && false}">

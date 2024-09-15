@@ -3,8 +3,10 @@ import { Web5 } from '@web5/api';
 import { DidJwk, DidDht, BearerDid } from '@web5/dids';
 import { DwnRegistrar } from '@web5/agent';
 import { Web5UserAgent } from '@web5/user-agent';
+import { ca } from 'date-fns/locale';
 
 let initialize;
+let connectInstance;
 const instances = {};
 const didLabelRegex = /(?:[^@]*@)?(did:[a-z0-9]+:[a-zA-Z0-9-]+)/;
 const storage = {
@@ -195,6 +197,9 @@ function createHiddenFrame(options = {}){
   if (options.onLoad) {
     iframe.addEventListener('load', () => options.onLoad(iframe), { once: true });
   }
+  if (options.onError) {
+    iframe.addEventListener('error', () => options.onError(iframe), { once: true });
+  }
   if (options.src) iframe.src = options.src;
   else if (options.srcdoc) iframe.srcdoc = options.srcdoc;
   if (options.appendTo) options.appendTo.append(iframe);
@@ -221,44 +226,35 @@ async function importIdentity(agent, portableIdentity, manage = false){
   }
 }
 
-async function handleWalletMessage(e) {
-  const { type, did, permissions } = e.data;
-
-  switch (type) {
-    case 'dweb-connect-support-request':
-      if (window.self !== window.top) {
-        const response = await DWeb.connect?.onSupportRequest?.(did);
+window.addEventListener('load', e => {
+  const framed = window.self !== window.top;
+  if (location.pathname === '/dweb-connect' && (framed || window.opener)) { 
+    window.addEventListener('message', async e => {
+      const { type, did, permissions } = e.data;
+      if (type === 'dweb-connect-support-request' && framed) {
+        const response = await DWeb.connect?.onSupportRequest?.(did).catch(e => false);
         window.parent.postMessage({
           type: 'dweb-connect-support-response',
           supported: response === false ? false : !!(await DWeb.identity.get(did))
         }, e.origin);
       }
-      break;
-
-    case 'dweb-connect-authorization-request':
-      if (!window?.opener?.closed) {
-        const { connection } = await DWeb.connect?.onAuthorizationRequest?.(did, permissions);
-        window.opener.postMessage({
-          type: 'dweb-connect-authorization-response',
-          connection
-        }, e.origin);
+      else if (type === 'dweb-connect-authorization-request') {
+        console.log('Authorization request from: ', e.origin);
+        if (!window?.opener?.closed) {
+          const { grants } = (await DWeb.connect?.onAuthorizationRequest?.(e.origin, did, permissions, e).catch(e => {})) || {};
+          window.opener.postMessage({
+            type: 'dweb-connect-authorization-response',
+            grants
+          }, e.origin);
+        }
+        window.close();
       }
-      window.close();
-      break;
+    });
+    window.opener?.postMessage({ type: 'dweb-connect-loaded' }, '*');
   }
-}
+});
 
-function walletMessageListener() {
-  const currentPath = location.pathname;
-  if (currentPath === '/dweb-connect' && (window.self !== window.top || window.opener !== null)) {
-    window.addEventListener('message', handleWalletMessage);
-  } else {
-    window.removeEventListener('message', handleWalletMessage);
-  }
-}
-
-window.addEventListener('load', walletMessageListener);
-window.addEventListener('popstate', walletMessageListener);
+window.addEventListener('beforeunload', () => DWeb.connect.abort());
 
 export const DWeb = globalThis.DWeb = {
   storage,
@@ -344,7 +340,7 @@ export const DWeb = globalThis.DWeb = {
       return identities.find(identity => identity.did.uri === uri);
     },
     async addAutofillDid(value){
-      triggerForm({ email: value });
+      await triggerForm({ email: value });
     },
     async backup (identity, options = {}){
       const portableDid = await getPortableDid(identity);
@@ -409,52 +405,66 @@ export const DWeb = globalThis.DWeb = {
     delete instances[instance.connectedDid];
   },
   connect: {
-    _webWalletConnectActive: false,
-    fromInput(element, options = {}){
-      element.addEventListener('change', async e => {
-        const input = e.target.closest('input');
-        const did = input.value?.match?.(didLabelRegex)?.[1];
-        if (did && !DWeb.connect._webWalletConnectActive) {
-          element.setAttribute('dweb-connect-active', '');
-          try {
-            const connection = await DWeb.connect.webWallet(did, e, options);
-            options?.onConnect?.(connection);
-          }
-          catch(e) {
-            options?.onError?.(e);
-          }
-          element.removeAttribute('dweb-connect-active');
-        }
-      }, { capture: true})
+    abort: (reject) => {
+      if (connectInstance) {
+        clearInterval(connectInstance.interval);
+        window.removeEventListener('message', connectInstance.listener);
+        if (reject !== false) connectInstance.reject();
+        connectInstance.window.close();
+        connectInstance = null;
+      }
     },
+    fromInput(element, options = {}){
+      element.addEventListener(options.event || 'change', async e => {
+        const input = e.target.closest('input') || e.composedPath().find(el => el.tagName === 'INPUT') || element;
+        const did = input.value?.match?.(didLabelRegex)?.[1];
+        if (!did) options?.onError?.('Invalid DID');
+        else {
+          if (connectInstance) connectInstance.window.focus();
+          else {
+            element.setAttribute('dweb-connect-active', '');
+            try {
+              const connection = await DWeb.connect.webWallet(did, e, options);
+              options?.onConnect?.(did, connection);
+            }
+            catch(e) {
+              options?.onError?.(e);
+            }
+            element.removeAttribute('dweb-connect-active');
+          }
+        }
+      }, { capture: true })
+    },
+
     async webWallet(did, event, options = {}){
-      let popup;
+      const maxLoadTime = 10000;
       return new Promise(async (resolve, reject) => {
-        if (DWeb.connect._webWalletConnectActive) throw 'An attempt to connect to a web wallet is already in progress';
-        DWeb.connect._webWalletConnectActive = true;
+        if (connectInstance) {
+          connectInstance.window.focus();
+          throw 'An attempt to connect to a web wallet is already in progress';
+        }
         if (!event.isTrusted) throw 'Connecting to a web wallet must be initiated by a user action';
         const width = 500;
         const height = 600;
         const left = (screen.width - width) / 2;
         const top = (screen.height - height) / 2;
-        popup = window.open('', '_blank', `width=${width},height=${height},left=${left},top=${top}`);
-        popup.document.write(popupContent);
+        connectInstance = {};
+        connectInstance.window = window.open('', '_blank', `popup=true,width=${width},height=${height},left=${left},top=${top}`);
+        connectInstance.window.document.write(popupContent);
+        connectInstance.reject = reject;
         const progressCallback = options.onProgress;
         const connectData = await fetch(`https://dweb/${did}/read/protocols/${encodeURIComponent('https://areweweb5yet.com/protocols/profile')}/connect`).then(res => {
-          return res.json()
-        }).catch(e => {
-          console.log(e);
-          //reject('No wallets found for ' + did)
-        });
+          return res.json();
+        }).catch(e => {});
         const wallets = connectData?.webWallets;
-        //if (!wallets?.length) return;
         console.log(wallets);
-        console.log(popup);
-
-        return;
-        popup.message.textContent = 'Wallets found. Attempting to connect...';
+        if (!wallets?.length) {
+          reject('No wallets found for ' + did);
+          return;
+        }
+        connectInstance.window.message.textContent = 'Wallets found. Attempting to connect...';
         progressCallback?.({ stage: 'wallets-found', wallets });
-        const walletDomain = await Promise.any(wallets.reduce(async (promises, domain) => {
+        const walletDomain = await Promise.any(wallets.reduce((promises, domain) => {
           const url = new URL(domain);
           if (url.protocol.match('http')) {
             promises.push(new Promise(async (resolve, reject) => {
@@ -472,42 +482,53 @@ export const DWeb = globalThis.DWeb = {
                   setTimeout(() => {
                     iframe.remove();
                     reject();
-                  }, 6000);
+                  }, maxLoadTime);
+                },
+                onError: iframe => {
+                  iframe.remove();
+                  reject();
                 }
               });
             }));
           }
           return promises;
-        }, [])).catch(e => {
-          reject('No wallet was able to provide connect support for ' + did);
-        });
-        if (!walletDomain) return;
-        popup.addEventListener('load', e => {
-          popup.postMessage({
-            type: 'dweb-connect-authorization-request',
-            did,
-            permissions: options.permissions
-          }, walletDomain);
-        }, { once: true });
-        popup.addEventListener('message', e => {
-          const { connection } = e.data;
-          if (e.origin === walletDomain && response.type === 'dweb-connect-authorization-response') {
-            if (connection) resolve({ connection });
-            else reject();
+        }, [])).catch(e => null);
+        if (!walletDomain) {
+          reject('No wallet was able to provide connection support for ' + did);
+          return;
+        }
+        let loaded = false;
+        function messageListener(e){
+          const { type, grants } = e.data;
+          if (e.origin === walletDomain){
+            if (type === 'dweb-connect-loaded') {
+              loaded = true;
+              connectInstance.window.postMessage({
+                type: 'dweb-connect-authorization-request',
+                did,
+                permissions: options.permissions
+              }, walletDomain);
+            }
+            else if (type === 'dweb-connect-authorization-response') {
+              DWeb.connect.abort(false);
+              if (grants) resolve({ did, grants });
+              else reject('Authorization rejected for connection request to ' + did);
+            }
           }
-        });
-        const checkClosed = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkClosed);
-            reject();
+        }
+        window.addEventListener('message', messageListener);
+        let elapsedTime = 0;
+        const intervalDuration = 500;
+        connectInstance.interval = setInterval(() => {
+          elapsedTime += intervalDuration;
+          if (connectInstance?.window?.closed || !loaded && elapsedTime > maxLoadTime) {
+            DWeb.connect.abort();
           }
-        }, 500);
+        }, intervalDuration);
         progressCallback?.({ stage: 'requesting-authorization', walletDomain });
-        popup.location.href = walletDomain + '/dweb-connect';
-
+        connectInstance.window.location.href = walletDomain + '/dweb-connect';
       }).finally(() => {
-        DWeb.connect._webWalletConnectActive = false;
-        popup?.close?.();
+        DWeb.connect.abort();
       })
     }
   }

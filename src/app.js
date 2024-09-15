@@ -16,8 +16,7 @@ async function initializeIdentities(list){
       if (record) {
         const data = record.cache.json || {};
         const wallets = data?.webWallets || (data.webWallets = []);
-        if (wallets.find(url => new URL(url).origin === location.origin)) return;
-        else {
+        if (!wallets.find(url => new URL(url).origin === location.origin)) {
           wallets.push(location.origin);
           await record.update({ data, published: true });
           if (navigator.onLine) await record.send();
@@ -26,6 +25,7 @@ async function initializeIdentities(list){
       else {
         record = await datastore.putRecordPath('profile', 'connect', { webWallets: [location.origin] }, { published: true });
       }
+      identity.connectRecord = record;
     }).catch(e => console.error(e)));
   }));
   Promise.allSettled(startupTasks).then(() => App.updateState('identities')).catch(e => console.error(e));
@@ -45,7 +45,7 @@ const $App = (superClass) => class extends superClass.with(State) {
     super();
 
     if (App) throw '$App is a singleton and an instance already exists.';
-    else App = this;
+    else globalThis.App = App = this;
 
     let ready;
     this.ready = new Promise(resolve => ready = resolve);
@@ -81,6 +81,20 @@ const $App = (superClass) => class extends superClass.with(State) {
   async addIdentities(list){
     const identities = await initializeIdentities(Array.isArray(list) ? list : [list]);
     return this.identities = { ...this.identities, ...identities };
+  }
+
+  async saveIdentityLabel(identity, label){
+    const record = identity.connectRecord;
+    if (!record) {
+      console.log('No connect record found for identity: ', identity);
+      return;
+    }
+    const data = record.cache.json;
+    data.label = label;
+    await record.update({ data, published: true });
+    if (navigator.onLine) await record.send();
+    await DWeb.identity.addAutofillDid(label + '@' + identity.did.uri);
+    this.updateState('identities');
   }
 
 }

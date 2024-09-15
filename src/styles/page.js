@@ -285,11 +285,26 @@ sl-tab-group::part(tabs) {
   font-style: italic;
 }
 
-[columns="2"] {
+[columns~="2"] {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 1rem 2rem;  /* Adjusts spacing between rows and columns */
+  gap: 1rem;  /* Adjusts spacing between rows and columns */
   align-items: center;
+}
+
+[columns~="2"] > *:nth-child(2n + 1) {
+  font-family: var(--app-font);
+}
+
+[columns~="2"][columns~="labels-right"] > *:nth-child(2n + 1) {
+  text-align: right;
+}
+
+[ellipsis] {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .shadow-icon {

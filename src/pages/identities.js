@@ -10,6 +10,7 @@ import '@vaadin/upload';
 import '../components/create-identity';
 import '../components/detail-box.js';
 import { DOM } from '../utils/dom.js';
+import { notify } from '../utils/notifications.js';
 import PageStyles from '../styles/page.js';
 
 import { State, Query, Spinner, SpinnerStyles } from '../components/mixins';
@@ -17,7 +18,7 @@ import { State, Query, Spinner, SpinnerStyles } from '../components/mixins';
 export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
   static properties = {
-    ready: { store: 'page', test: true },
+    ready: { store: 'page' },
     identities: { store: 'page' },
     identityEndpointUpdate: { type: Object }
   }
@@ -31,22 +32,11 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
 
   constructor() {
     super();
+    this.lastIdentityLabelSave = Date.now();
     this.profileProtocolUri = encodeURIComponent(protocols.profile.uri)
   }
 
   firstUpdated() {
-    DWeb.connect.fromInput(this.renderRoot.querySelector('#test'), {
-      onConnect: async (did) => {
-        console.log(did);
-      },
-      onError: (e) => {
-        console.log(e);
-      },
-      onProgress: (p) => {  
-        console.log(p);
-      }
-    });
-
 
     if (!this.ready.state) {
       this.startSpinner({ target: 'section', minimum: 500, renderImmediate: true });
@@ -108,6 +98,21 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
     catch(e){}
   }
 
+  async saveIdentityLabel(e, identity) {
+    console.log(e);
+    let label = e.target.value.trim().toLowerCase();
+    let currentLabel = identity.connectRecord?.cache?.json?.label || '';
+    if (label && label !== currentLabel && Date.now() > this.lastIdentityLabelSave + 2000) {
+      this.lastIdentityLabelSave = Date.now();
+      await App.saveIdentityLabel(identity, label)
+        .then(e => notify.success('Your profile info was saved'))
+        .catch(e => {
+          e.target.value = currentLabel;
+          notify.error('There was an error saving your new label for this identity');
+        });
+    }
+  }
+
   render() {
     const identities = Object.values(this.identities || {});
 
@@ -116,7 +121,6 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
         ${ !identities?.length ? 
           html`
             <connect-widget></connect-widget>
-            <input id="test" type="text" name="email" autocomplete="on" placeholder="Enter a DID" />
           ` : 
           html`
             <h2>Identities</h2>
@@ -136,11 +140,16 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
                   </div>
                   <detail-box hide-toggle>
                     <div>
-                      <div columns="2">
-                        <span>Identity Label</span>
-                        <div><sl-input size="small" value="${identity.label}" autocomplete="off" placeholder="Ex: social, career, family"></sl-input></div>
+                      <div columns="2 labels-right">
+                        <span>Identity Label:</span>
+                        <div>
+                          <sl-input size="small" value="${identity?.connectRecord?.cache?.json?.label}" autocomplete="off" placeholder="Ex: social, career, family" 
+                            @sl-input="${e => e.target.value = e.target.value.trim().toLowerCase()}"
+                            @sl-change="${e => this.saveIdentityLabel(e, identity)}"
+                          ></sl-input>
+                        </div>
 
-                        <span>Backup</span>
+                        <span>Backup:</span>
                         <div>
                           <sl-button size="small" @click="${ e => DWeb.identity.backup(identity, { to: 'file' }) }">
                             <sl-icon slot="prefix" name="download"></sl-icon> Download identity backup
@@ -162,7 +171,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
               <sl-button id="create_identity_button" variant="success" size="small" @click="${ e => this.createIdentityModal.show() }">
                 <sl-icon slot="prefix" name="person-plus"></sl-icon> Create an Identity
               </sl-button>
-              <sl-button id="restore_identity_button" variant="primary" size="small" @click="${ e => DOM.fireEvent(this, 'show-restore-identity-modal') }">
+              <sl-button id="restore_identity_button" variant="primary" size="small" @click="${ e => App.restoreIdentityModal.show() }">
                 <sl-icon slot="prefix" name="person-up"></sl-icon> Restore an Identity
               </sl-button>
             </div>
