@@ -1,5 +1,5 @@
 
-import { DWeb } from './utils/dweb.js';
+import { DWeb } from './utils/dweb';
 import { State } from './components/mixins/index.js';
 import { Datastore } from './utils/datastore.js';
 

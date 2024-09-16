@@ -1,5 +1,4 @@
 import { LitElement, css, html, nothing, render } from 'lit';
-import { ifDefined } from 'lit/directives/if-defined.js';
 
 import { App } from '../app.js';
 import * as protocols from '../utils/protocols.js';
@@ -9,7 +8,6 @@ import '@vaadin/upload';
 
 import '../components/create-identity';
 import '../components/detail-box.js';
-import { DOM } from '../utils/dom.js';
 import { notify } from '../utils/notifications.js';
 import PageStyles from '../styles/page.js';
 

@@ -1,5 +1,4 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { ifDefined } from 'lit/directives/if-defined.js';
 import { format, intervalToDuration, formatDuration } from "date-fns";
 
 import { App } from '../app.js';
@@ -10,7 +9,6 @@ import { socialApps } from '../utils/content.js';
 import { natives } from '../utils/helpers.js';
 import { DOM } from '../utils/dom.js';
 import { notify } from '../utils/notifications.js';
-
 
 import './shoelace.js';
 import { State, Query } from './mixins';

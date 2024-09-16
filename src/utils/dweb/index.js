@@ -1,209 +1,56 @@
 
 import { Web5 } from '@web5/api';
 import { DidJwk, DidDht, BearerDid } from '@web5/dids';
-import { DwnRegistrar } from '@web5/agent';
 import { Web5UserAgent } from '@web5/user-agent';
+
+import {
+  storage,
+  getUserDidOptions,
+  registerEndpoints,
+} from './helpers';
+
+import {
+  triggerDownload,
+  triggerForm,
+  createPopup,
+  createHiddenFrame
+} from './dom';
 
 let initialize;
 let connectInstance;
 const instances = {};
 const didLabelRegex = /(?:[^@]*@)?(did:[a-z0-9]+:[a-zA-Z0-9-]+)/;
-const storage = {
-  get: (key, _default) => {
-    let value = JSON.parse(localStorage.getItem('web5:' + key));
-    if (value) return value;
-    if (_default !== undefined) {
-      storage.set(key, _default);
-      return _default;
-    }
-  },
-  set: (key, value) => {
-    localStorage.setItem('web5:' + key, JSON.stringify(value))
-    return value;
-  },
-  modify: (key, fn) => {
-    const value = this.get(key);
-    return this.set(key, fn(value));
+
+window.addEventListener('load', e => {
+  const framed = window.self !== window.top;
+  if (location.pathname === '/dweb-connect' && (framed || window.opener)) { 
+    window.addEventListener('message', async e => {
+      const { type, did, permissions } = e.data;
+      if (type === 'dweb-connect-support-request' && framed) {
+        const response = await DWeb.connect?.onSupportRequest?.(did).catch(e => false);
+        window.parent.postMessage({
+          type: 'dweb-connect-support-response',
+          supported: response === false ? false : !!(await DWeb.identity.get(did))
+        }, e.origin);
+      }
+      else if (type === 'dweb-connect-authorization-request') {
+        console.log('Authorization request from: ', e.origin);
+        if (!window?.opener?.closed) {
+          const { grants } = (await DWeb.connect?.onAuthorizationRequest?.(e.origin, did, permissions, e).catch(e => {})) || {};
+          // generate grants here
+          window.opener.postMessage({
+            type: 'dweb-connect-authorization-response',
+            grants
+          }, e.origin);
+        }
+        window.close();
+      }
+    });
+    window.opener?.postMessage({ type: 'dweb-connect-loaded' }, '*');
   }
-};
+});
 
-const popupContent = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connecting...</title>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #000;
-      color: #fff;
-    }
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .text {
-      font-size: 16px;
-      color: #333;
-    }
-    .spinner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 15px;
-      font-size: 2em;
-    }
-      .spinner div {
-        position: relative;
-        width: 2em;
-        height: 2em;
-        margin: 0.1em 0.25em 0 0;
-      }
-      .spinner div::after,
-      .spinner div::before {
-        content: '';  
-        box-sizing: border-box;
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        border: 0.1em solid #FFF;
-        position: absolute;
-        left: 0;
-        top: 0;
-        opacity: 0;
-        animation: spinner 2s linear infinite;
-      }
-      .spinner div::after {
-        animation-delay: 1s;
-      }
-
-    @keyframes spinner {
-      0% {
-        transform: scale(0);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1);
-        opacity: 0;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="spinner">
-      <div></div>
-    </div>
-    <div id="message">Locating wallets...</div>
-  </div>
-</body>
-</html>
-`;
-
-function getUserDidOptions(endpoints){
-  return {
-    services: [
-      {
-        id              : 'dwn',
-        type            : 'DecentralizedWebNode',
-        serviceEndpoint : endpoints || ['https://dwn.tbddev.org/beta'],
-        enc             : '#enc',
-        sig             : '#sig',
-      }
-    ],
-    verificationMethods: [
-      {
-        algorithm : 'Ed25519',
-        id        : 'sig',
-        purposes  : ['assertionMethod', 'authentication']
-      },
-      {
-        algorithm : 'secp256k1',
-        id        : 'enc',
-        purposes  : ['keyAgreement']
-      }
-    ]
-  }
-}
-
-async function registerEndpoints(agent, identity, dwnEndpoints = [], registration){
-  try {
-    for (const endpoint of dwnEndpoints) {
-      const serverInfo = await agent.rpc.getServerInfo(endpoint);
-      if (serverInfo.registrationRequirements.length === 0) {
-        continue;
-      }
-      // register agent DID
-      await DwnRegistrar.registerTenant(endpoint, agent.agentDid.uri);
-      // register connected Identity DID
-      await DwnRegistrar.registerTenant(endpoint, identity.did.uri);
-    }
-    registration.onSuccess();
-  } catch(error) {
-    registration.onFailure(error);
-  }
-}
-
-function triggerDownload(filename, data, type = 'application/json'){
-  const blob = new Blob([data], { type });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.append(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-const inputTypes = { email: 'email', password: 'password' };
-async function triggerForm(fields, element = document.body) {
-  return new Promise(resolve => {
-    createHiddenFrame({
-      appendTo: element,
-      srcdoc: `<body>${
-        Object.keys(fields).reduce((html, field) => {
-          const autocomplete = field === 'password' ? 'current-password' : field;
-          return html + `<input type="${inputTypes[field] || 'text'}" name="${field}" value="${fields[field]}" autocomplete="${autocomplete}">`;
-        }, '<form action="#" method="POST">') + '</form>'
-      }<script>document.forms[0].submit();</script></body>`,
-      onLoad: iframe => setTimeout(() => {
-        iframe.remove();
-        resolve();
-      }, 100)
-    })
-  });
-}
-
-function createHiddenFrame(options = {}){
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.bottom = '0';
-  iframe.style.left = '0';
-  iframe.style.width = '1px'; 
-  iframe.style.height = '1px';
-  iframe.style.zIndex = '-1000';
-  if (options.onLoad) {
-    iframe.addEventListener('load', () => options.onLoad(iframe), { once: true });
-  }
-  if (options.onError) {
-    iframe.addEventListener('error', () => options.onError(iframe), { once: true });
-  }
-  if (options.src) iframe.src = options.src;
-  else if (options.srcdoc) iframe.srcdoc = options.srcdoc;
-  if (options.appendTo) options.appendTo.append(iframe);
-  return iframe;
-}
+window.addEventListener('beforeunload', () => DWeb.connect.abort());
 
 async function getAgent(){
   return DWeb.initialize({ portableAgent: false });
@@ -224,36 +71,6 @@ async function importIdentity(agent, portableIdentity, manage = false){
     return identity;
   }
 }
-
-window.addEventListener('load', e => {
-  const framed = window.self !== window.top;
-  if (location.pathname === '/dweb-connect' && (framed || window.opener)) { 
-    window.addEventListener('message', async e => {
-      const { type, did, permissions } = e.data;
-      if (type === 'dweb-connect-support-request' && framed) {
-        const response = await DWeb.connect?.onSupportRequest?.(did).catch(e => false);
-        window.parent.postMessage({
-          type: 'dweb-connect-support-response',
-          supported: response === false ? false : !!(await DWeb.identity.get(did))
-        }, e.origin);
-      }
-      else if (type === 'dweb-connect-authorization-request') {
-        console.log('Authorization request from: ', e.origin);
-        if (!window?.opener?.closed) {
-          const { grants } = (await DWeb.connect?.onAuthorizationRequest?.(e.origin, did, permissions, e).catch(e => {})) || {};
-          window.opener.postMessage({
-            type: 'dweb-connect-authorization-response',
-            grants
-          }, e.origin);
-        }
-        window.close();
-      }
-    });
-    window.opener?.postMessage({ type: 'dweb-connect-loaded' }, '*');
-  }
-});
-
-window.addEventListener('beforeunload', () => DWeb.connect.abort());
 
 export const DWeb = globalThis.DWeb = {
   storage,
@@ -414,8 +231,8 @@ export const DWeb = globalThis.DWeb = {
       }
     },
     attachInput(element, options = {}){
-      if (element.__dweb_connect__) return;
-      const settings = element.__dweb_connect__ = {
+      if (element._dweb_connect) return;
+      const settings = element._dweb_connect = {
         event: options.event || 'change',
         listener: async e => {
           const input = e.target.closest('input') || e.composedPath().find(el => el.tagName === 'INPUT') || element;
@@ -440,9 +257,10 @@ export const DWeb = globalThis.DWeb = {
       element.addEventListener(settings.event, settings.listener)
     },
     detachInput(element){
-      if (!element.__dweb_connect__) return;
-      element.removeEventListener(element.__dweb_connect__.event, element.__dweb_connect__.listener)
-      delete element.__dweb_connect__;
+      if (!element._dweb_connect) return;
+      element.removeAttribute('dweb-connect-active');
+      element.removeEventListener(element._dweb_connect.event, element._dweb_connect.listener)
+      delete element._dweb_connect;
     },
     async webWallet(did, event, options = {}){
       const maxLoadTime = 10000;
@@ -452,14 +270,7 @@ export const DWeb = globalThis.DWeb = {
           throw 'An attempt to connect to a web wallet is already in progress';
         }
         if (!event.isTrusted) throw 'Connecting to a web wallet must be initiated by a user action';
-        const width = 500;
-        const height = 600;
-        const left = (screen.width - width) / 2;
-        const top = (screen.height - height) / 2;
-        connectInstance = {};
-        connectInstance.window = window.open('', '_blank', `popup=true,width=${width},height=${height},left=${left},top=${top}`);
-        connectInstance.window.document.write(popupContent);
-        connectInstance.reject = reject;
+        connectInstance = { window: createPopup(), reject};
         const progressCallback = options.onProgress;
         const connectData = await fetch(`https://dweb/${did}/read/protocols/${encodeURIComponent('https://areweweb5yet.com/protocols/profile')}/connect`).then(res => {
           return res.json();
@@ -519,7 +330,10 @@ export const DWeb = globalThis.DWeb = {
             }
             else if (type === 'dweb-connect-authorization-response') {
               DWeb.connect.abort(false);
-              if (grants) resolve({ did, grants });
+              if (grants) {
+                // use grants here
+                resolve({ did, grants });
+              }
               else reject('Authorization rejected for connection request to ' + did);
             }
           }

@@ -6,7 +6,7 @@ import './shoelace';
 import PageStyles from '../styles/page.js';
 import * as protocols from '../utils/protocols.js';
 
-import { DWeb } from '../utils/dweb';
+import { DWeb } from '../utils/dweb'; 
 import { State, Query, Spinner, SpinnerStyles } from '../components/mixins';
 
 export class ConnectWidget extends LitElement.with(State, Query, Spinner) {
