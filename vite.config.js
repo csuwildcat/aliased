@@ -27,6 +27,7 @@ export default defineConfig({
     }
   },
   build: {
+    target: 'esnext',
     rollupOptions: {
       plugins: [
         NodeGlobalsPolyfillPlugin({
