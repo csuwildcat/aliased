@@ -52,14 +52,16 @@ window.addEventListener('load', e => {
             }
             catch (e) {
               console.log(e)
+              DWeb.connect?.onGrantError?.(e.origin, did, permissions);
             }
           }
-          console.log('Sending grants: ', grants);
+          DWeb.connect?.onAuthorizationComplete?.(e.origin, did, permissions, grants);
           window.opener.postMessage({
             type: 'dweb-connect-authorization-response',
             delegateDid,
             grants
           }, e.origin);
+          
         }
         window.close();
       }
@@ -268,8 +270,8 @@ export const DWeb = globalThis.DWeb = {
             else {
               element.setAttribute('dweb-connect-active', '');
               try {
-                const connection = await DWeb.connect.webWallet(did, e, options);
-                options?.onConnect?.(did, connection);
+                const response = await DWeb.connect.webWallet(did, e, options);
+                options?.onConnect?.(...response);
               }
               catch(e) {
                 options?.onError?.(e);

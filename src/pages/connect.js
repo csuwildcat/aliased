@@ -5,14 +5,18 @@ import PageStyles from '../styles/page';
 import * as protocols from '../utils/protocols.js';
 
 import { DWeb } from '../utils/dweb';
-import { State, Spinner } from '../components/mixins';
+import { State, Spinner, Query } from '../components/mixins';
 
-export class ConnectPage extends LitElement.with(State, Spinner) {
+export class ConnectPage extends LitElement.with(State, Spinner, Query) {
 
   static properties = {
     identities: { store: 'page' },
     origin: { type: String },
     permissions: { type: Object }
+  }
+  
+  static query = {
+    acceptButton: ['#accept_button'],
   }
 
   constructor() {
@@ -30,10 +34,15 @@ export class ConnectPage extends LitElement.with(State, Spinner) {
         this.#deny = reject;
       });
     };
+
+    DWeb.connect.onAuthorizationComplete = () => {
+      this.acceptButton.loading = false;
+    }
   }
 
   #allow;
   allow() {
+    this.acceptButton.loading = true;
     this.#allow({ authorize: true });
   }
 

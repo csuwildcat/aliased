@@ -27,9 +27,14 @@ jobs:
     - name: Build the project with pnpm
       run: pnpm run build
 
-    - name: Deploy to GitHub Pages
+    - name: Configure Git user
       run: |
-        echo "aliased.app" > dist/CNAME
-        pnpm exec gh-pages -d dist -b gh-pages
+        git config user.name "Daniel Buchner"
+        git config user.email "csuwildcat@users.noreply.github.com"
+
+    - name: Deploy to GitHub Pages
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "aliased.app" > dist/CNAME
+        npx gh-pages -d dist -b gh-pages --repo https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git --user "Daniel Buchner csuwildcat@users.noreply.github.com"
