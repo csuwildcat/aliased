@@ -6799,13 +6799,11 @@ sl-button:not([circle]) sl-icon {
 }
 
 sl-dialog::part(panel) {
-  width: calc(100% - 1rem);
+  width: calc(100% - 2rem);
   max-width: 600px;
 }
 
 sl-dialog[fit-content]::part(panel) {
-  width: -moz-fit-content;
-  width: fit-content;
   height: fit-content;
 }
 
