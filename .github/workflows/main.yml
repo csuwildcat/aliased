@@ -1,0 +1,35 @@
+name: Deploy Vite PWA to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install pnpm
+      run: npm install -g pnpm
+
+    - name: Install dependencies with pnpm
+      run: pnpm install
+
+    - name: Build the project with pnpm
+      run: pnpm run build
+
+    - name: Deploy to GitHub Pages
+      run: |
+        echo "aliased.me" > dist/CNAME
+        pnpm exec gh-pages -d dist -b gh-pages
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
