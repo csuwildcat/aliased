@@ -33,8 +33,10 @@ jobs:
       run: pnpm run build
 
     - name: Deploy to GitHub Pages
-      run: |
-        echo "your-custom-domain.com" > dist/CNAME
-        pnpm exec gh-pages -d dist -b gh-pages
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "aliased.app" > dist/CNAME
+        pnpm exec gh-pages -d dist -b gh-pages \
+          --repo "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" \
+          --user "Daniel Buchner <csuwildcat@users.noreply.github.com>"
