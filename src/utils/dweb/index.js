@@ -7,6 +7,7 @@ import {
   storage,
   getUserDidOptions,
   registerEndpoints,
+  generateGrants
 } from './helpers';
 
 import {
@@ -36,10 +37,27 @@ window.addEventListener('load', e => {
       else if (type === 'dweb-connect-authorization-request') {
         console.log('Authorization request from: ', e.origin);
         if (!window?.opener?.closed) {
-          const { grants } = (await DWeb.connect?.onAuthorizationRequest?.(e.origin, did, permissions, e).catch(e => {})) || {};
-          // generate grants here
+          let delegateDid, grants;
+          const { authorize } = (await DWeb.connect?.onAuthorizationRequest?.(e.origin, did, permissions, e).catch(e => {})) || {};
+          if (authorize) {
+            try {
+              const web5 = await DWeb.use(did);
+              ({ delegateDid, grants } = await generateGrants(web5, permissions).catch(e => {
+                console.error(e);
+                return {};
+              }));
+              if (!grants) {
+                console.error('Failed to generate grants');
+              }
+            }
+            catch (e) {
+              console.log(e)
+            }
+          }
+          console.log('Sending grants: ', grants);
           window.opener.postMessage({
             type: 'dweb-connect-authorization-response',
+            delegateDid,
             grants
           }, e.origin);
         }
@@ -144,16 +162,19 @@ export const DWeb = globalThis.DWeb = {
       return identity;
     },
     async list(){
-      const agent = await getAgent();
-      return agent.identity.list();
+      const list = await (await getAgent()).identity.list();
+      list.forEach(item => {
+        item.connectedDid = item.metadata?.connectedDid || item.did.uri;
+      });
+      return list;
     },
     async get(uri){
-      // redo this to use the agent.identity.get(uri)
-      // const agent = await getAgent();
-      // const result = await agent.identity.get({ didUri: uri })
-      // return result;
-      const identities = await this.list();
-      return identities.find(identity => identity.did.uri === uri);
+      const identity = await (await getAgent()).identity.get({ didUri: uri })
+      if (!identity) return;
+      identity.connectedDid = identity?.metadata?.connectedDid || identity.did.uri;
+      return identity;
+      // const identities = await this.list();
+      // return identities.find(identity => identity.did.uri === uri);
     },
     async addAutofillDid(value){
       await triggerForm({ email: value });
@@ -198,23 +219,27 @@ export const DWeb = globalThis.DWeb = {
     }
   },
   async use(identity, options = {}){
-    const uri = identity?.metadata?.uri || identity?.uri || identity;
-    let instance = instances[uri];
-    if (instance) return instance;
-    const agent = await getAgent();
-    const entry = await DWeb.identity.get(uri);
-    if (!entry) {
-      await agent.identity.manage({ portableIdentity: await getPortableDid(identity) });
-    }
-    instance = new Web5({
-      agent: agent,
-      connectedDid: uri
-    });
-    instances[uri] = instance;
-    if (options.sync !== false) {
-      await agent.sync.registerIdentity({ did: uri });
-    }
-    return instance;
+    const delegateDid = identity?.metadata?.connectedDid ? identity.did.uri : undefined;
+    const uri = identity?.metadata?.connectedDid || identity?.did?.uri || identity?.uri || identity;
+    return instances[uri] || (instances[uri] = new Promise(async resolve => {
+      const agent = await getAgent();
+      const entry = await DWeb.identity.get(delegateDid || uri);
+      if (!entry) {
+        await agent.identity.manage({ portableIdentity: await getPortableDid(identity) });
+      }
+      const instance = new Web5({
+        agent: agent,
+        connectedDid: uri,
+        delegateDid
+      });
+      if (options.sync !== false) {
+        const isRegistered = await agent.sync.getIdentityOptions(uri); 
+        if (!isRegistered) {
+          await agent.sync.registerIdentity({ did: uri });
+        }
+      }
+      resolve(instance);
+    }));
   },
   dispose(instance){
     (instance?.agent || instance).sync.stopSync();
@@ -276,7 +301,6 @@ export const DWeb = globalThis.DWeb = {
           return res.json();
         }).catch(e => {});
         const wallets = connectData?.webWallets;
-        console.log(wallets);
         if (!wallets?.length) {
           reject('No wallets found for ' + did);
           return;
@@ -317,8 +341,8 @@ export const DWeb = globalThis.DWeb = {
           return;
         }
         let loaded = false;
-        function messageListener(e){
-          const { type, grants } = e.data;
+        async function messageListener(e){
+          const { type, delegateDid, grants } = e.data;
           if (e.origin === walletDomain){
             if (type === 'dweb-connect-loaded') {
               loaded = true;
@@ -331,8 +355,30 @@ export const DWeb = globalThis.DWeb = {
             else if (type === 'dweb-connect-authorization-response') {
               DWeb.connect.abort(false);
               if (grants) {
-                // use grants here
-                resolve({ did, grants });
+                const agent = await getAgent();
+                const identity = await agent.identity.import({ portableIdentity: {
+                  portableDid: delegateDid,
+                  metadata    : {
+                    connectedDid: did,
+                    name   : 'Default',
+                    tenant : delegateDid.uri,
+                    uri    : delegateDid.uri,
+                  }
+                }});
+                await agent.identity.manage({ portableIdentity: await identity.export() });
+                const connectedProtocols = await Web5.processConnectedGrants({ grants, agent, delegateDid: delegateDid.uri });
+                const isRegistered = await agent.sync.getIdentityOptions(did);
+                if (!isRegistered) {
+                  await agent.sync.registerIdentity({
+                    did,
+                    options : {
+                      delegateDid: delegateDid.uri,
+                      protocols: connectedProtocols
+                    }
+                  });
+                }
+                await agent.sync.sync('pull');
+                resolve({ did, delegateDid, grants });
               }
               else reject('Authorization rejected for connection request to ' + did);
             }

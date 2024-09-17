@@ -124,7 +124,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
             <h2>Identities</h2>
             <ul id="identity_list" limit-width>
               ${identities.map(identity => {
-                const did = identity.did.uri;
+                const did = identity.connectedDid;
                 return html`
                 <li>
                   <div flex="center-y">
@@ -186,8 +186,8 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
           ${
             this.identityEndpointUpdate ?
               html`
-                <sl-avatar image="${this.identityEndpointUpdate.identity?.avatar || `https://dweb/${this.identityEndpointUpdate.identity.did.uri}/read/protocols/${this.profileProtocolUri}/avatar`}" shape="circle" size="small"></sl-avatar>
-                <div>${this.identityEndpointUpdate.identity.did.uri}</div>
+                <sl-avatar image="${this.identityEndpointUpdate.identity?.avatar || `https://dweb/${this.identityEndpointUpdate.identity.connectedDid}/read/protocols/${this.profileProtocolUri}/avatar`}" shape="circle" size="small"></sl-avatar>
+                <div>${this.identityEndpointUpdate.identity.connectedDid}</div>
               ` : nothing
           }
         </div>

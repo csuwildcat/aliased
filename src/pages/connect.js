@@ -34,12 +34,12 @@ export class ConnectPage extends LitElement.with(State, Spinner) {
 
   #allow;
   allow() {
-    this.#allow({ grants: this.permissions });
+    this.#allow({ authorize: true });
   }
 
   #deny;
   deny() {
-   this.#deny({ error: 'User denied authorization' });
+   this.#deny({ authorize: false });
   }
 
   render() {

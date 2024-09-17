@@ -31,7 +31,7 @@ export class ConnectWidget extends LitElement.with(State, Query, Spinner) {
           permissionScopes   : 
             [
              'Query', 'Read', 'Subscribe', 'Write', 'Delete',
-             'Configure:Protocols',
+             'Query:Protocols',
              'Query:Messages', 'Read:Messages', 'Subscribe:Messages'
             ].map(scope => {
               scope = scope.split(':');
@@ -63,7 +63,9 @@ export class ConnectWidget extends LitElement.with(State, Query, Spinner) {
       <section flex="column center-x center-y">
         <sl-button variant="default" size="large" @click="${ async e => {
           e.target.loading = true;
-          const identity = await DWeb.identity.create({ dwnEndpoints: ['http://localhost:3000'] });
+          const identity = await DWeb.identity.create({
+            //dwnEndpoints: ['http://localhost:3000']
+          });
           App.addIdentities(identity);
           e.target.loading = false;
           router.navigateTo(`/profiles/${identity.did.uri}`);
