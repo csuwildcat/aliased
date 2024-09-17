@@ -10414,7 +10414,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       @media(max-width: 800px) {
-        #nav {  
+        #nav {
+          top: var(--header-height);
           width: 150px;
           transform: translateX(-100%);
           z-index: 1;
