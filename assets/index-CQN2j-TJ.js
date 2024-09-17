@@ -10288,32 +10288,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         width: var(--nav-width);
         padding: 0.6rem 0;
         background: var(--grey);
-        box-shadow: 0 0 2px 1px rgba(0 0 0 / 25%);
         border-right: 1px solid rgba(0 0 0 / 60%);
         text-align: center;
         transition: transform 0.3s ease;
         z-index: 1;
       }
 
-      #nav:before {
-        content: " ";
-        position: fixed;
-        top: 0;
-        left: 100%;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.5);
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition: opacity 0.3s ease, visibility 0.3s ease;
-      }
+        #nav:before {
+          content: " ";
+          position: fixed;
+          top: 0;
+          left: 100%;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0, 0, 0, 0.5);
+          box-shadow: 2px 0 2px 1px rgba(0 0 0 / 25%);
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+          transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
 
-      #nav[open]:before { 
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-      }
+        #nav[open]:before { 
+          opacity: 1;
+          visibility: visible;
+          pointer-events: auto;
+        }
 
       #nav a {
         display: flex;
