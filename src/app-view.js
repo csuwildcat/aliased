@@ -308,7 +308,8 @@ export class AppView extends LitElement.with($App, State, Query) {
       }
 
       @media(max-width: 800px) {
-        #nav {  
+        #nav {
+          top: var(--header-height);
           width: 150px;
           transform: translateX(-100%);
           z-index: 1;
