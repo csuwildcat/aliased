@@ -148,7 +148,7 @@ export const DWeb = globalThis.DWeb = {
   identity: {
     async create (options = {}){
       const agent = await getAgent();
-      const dwnEndpoints = options.dwnEndpoints || ['https://dwn.tbddev.org/beta'];
+      const dwnEndpoints = options.dwnEndpoints || ['https://dwn.tbddev.org/latest'];
       const identity = await agent.identity.create({
         didMethod  : options.method || 'dht',
         metadata   : { name: 'Default' },
