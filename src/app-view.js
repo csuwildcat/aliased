@@ -192,6 +192,26 @@ export class AppView extends LitElement.with($App, State, Query) {
         z-index: 1;
       }
 
+      #nav:before {
+        content: " ";
+        position: fixed;
+        top: 0;
+        left: 100%;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+
+      #nav[open]:before { 
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+      }
+
       #nav a {
         display: flex;
         flex-direction: column;

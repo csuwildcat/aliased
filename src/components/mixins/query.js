@@ -29,9 +29,8 @@ export const Query = (Base) => class extends Base {
     if (cache && this.#queryCache.has(key)) {
       return this.#queryCache.get(key);
     }
-
     const element = this.renderRoot.querySelector(selector);
-    if (cache) {
+    if (cache && element) {
       this.#queryCache.set(key, element);
     }
     return element;
