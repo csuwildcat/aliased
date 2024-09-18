@@ -10,6 +10,13 @@ export default defineConfig({
   define: {
     global: 'globalThis',
   },
+  build: {
+    rollupOptions: {
+      input: {
+        sw: 'src/sw.js'
+      }
+    }
+  },
   plugins: [
     nodePolyfills(),
     VitePWA({
@@ -32,7 +39,7 @@ export default defineConfig({
       },
 
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico}']
       },
 
       workbox: {
