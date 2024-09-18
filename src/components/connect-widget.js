@@ -66,7 +66,7 @@ export class ConnectWidget extends LitElement.with(State, Query, Spinner) {
           const identity = await DWeb.identity.create({
             //dwnEndpoints: ['http://localhost:3000']
           });
-          App.addIdentities(identity);
+          App.addIdentity(identity);
           e.target.loading = false;
           router.navigateTo(`/profiles/${identity.did.uri}`);
         }}">

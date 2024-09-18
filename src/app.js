@@ -78,11 +78,10 @@ const $App = (superClass) => class extends superClass.with(State) {
     return record;
   }
 
-  async addIdentities(list){
-    const identities = await initializeIdentities(Array.isArray(list) ? list : [list]);
-    return this.identities = { ...this.identities, ...identities };
+  async addIdentity(identity){
+    return this.identities = { ...(this.identities || {}), [identity.did.uri]: identity }; 
   }
-
+  
   async saveIdentityLabel(identity, label){
     const record = identity.connectRecord;
     if (!record) {

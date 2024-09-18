@@ -59,7 +59,7 @@ export class AppView extends LitElement.with($App, State, Query) {
     if (!this.restoreUploader || !this.restoreUploader.files.length) return;
     try {
       const restored = await DWeb.identity.restore({ from: 'file', files: this.restoreUploader.files })
-      if (restored) await App.addIdentities(restored);
+      if (restored) await App.addIdentity(restored);
       this.restoreIdentityModal.hide();
     }
     catch(e){

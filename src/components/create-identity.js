@@ -33,7 +33,7 @@ export class CreateIdentity extends LitElement.with(State, Query) {
         this.createIdentityButton.loading = true;
         const identity = await DWeb.identity.create({ dwnEndpoints: ['http://localhost:3000'] });
         await DWeb.identity.addAutofillDid(label + '@' + identity.did.uri);
-        App.addIdentities(identity);
+        App.addIdentity(identity);
         this.createIdentityButton.loading = false;
         DOM.fireEvent(this, 'identity-created', { detail: { identity } });
       }}">

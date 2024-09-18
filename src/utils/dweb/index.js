@@ -161,6 +161,7 @@ export const DWeb = globalThis.DWeb = {
         await registerEndpoints(agent, identity, dwnEndpoints, options.registration)
               .catch(e => console.log('Endpoint registration failed: ', e))
       }
+      identity.connectedDid = identity.metadata?.connectedDid || identity.did.uri;
       return identity;
     },
     async list(){
