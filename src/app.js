@@ -79,9 +79,9 @@ const $App = (superClass) => class extends superClass.with(State) {
   }
 
   async addIdentity(identity){
-    return this.identities = { ...(this.identities || {}), [identity.did.uri]: identity }; 
+    return this.identities = { ...(this.identities || {}), [DWeb.identity.uriFrom(identity)]: identity }; 
   }
-  
+
   async saveIdentityLabel(identity, label){
     const record = identity.connectRecord;
     if (!record) {

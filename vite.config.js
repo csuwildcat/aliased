@@ -35,6 +35,7 @@ export default defineConfig({
         globIgnores: [
           'assets/icons/**'
         ],
+        maximumFileSizeToCacheInBytes: 1024 * 1024 * 5,
       },
 
       workbox: {

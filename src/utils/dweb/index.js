@@ -179,6 +179,9 @@ export const DWeb = globalThis.DWeb = {
       // const identities = await this.list();
       // return identities.find(identity => identity.did.uri === uri);
     },
+    uriFrom(identity){
+      return identity?.metadata?.connectedDid || identity?.did?.uri || identity?.uri || identity;
+    },
     async addAutofillDid(value){
       await triggerForm({ email: value });
     },
