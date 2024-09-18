@@ -81,6 +81,8 @@ sl-dialog::part(panel) {
 
 sl-dialog[fit-content]::part(panel) {
   height: fit-content;
+  width: fit-content;
+  max-width: calc(100% - 2rem);
 }
 
 sl-dialog::part(header) {
