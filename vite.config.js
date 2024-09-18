@@ -13,9 +13,10 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        sw: 'src/sw.js'
-      }
-    }
+        main: 'index.html',
+        sw: 'src/sw.js',
+      },
+    },
   },
   plugins: [
     nodePolyfills(),
