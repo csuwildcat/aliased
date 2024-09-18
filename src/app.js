@@ -6,7 +6,7 @@ import { Datastore } from './utils/datastore.js';
 async function initializeIdentities(list){
   const identities = {};
   const startupTasks = [];
-  list = list || await DWeb.identity.list();
+  list = !list ? await DWeb.identity.list() : Array.isArray(list) ? list : [list];
   await Promise.all(list.map(async identity => {
     identities[identity.did.uri] = identity;
     if (identity.web5) return;
@@ -79,6 +79,7 @@ const $App = (superClass) => class extends superClass.with(State) {
   }
 
   async addIdentity(identity){
+    await initializeIdentities(identity);
     return this.identities = { ...(this.identities || {}), [DWeb.identity.uriFrom(identity)]: identity }; 
   }
 
