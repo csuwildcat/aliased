@@ -1,6 +1,6 @@
 
 if (!globalThis.URLPattern) {
-  await import('urlpattern-polyfill')
+  import('urlpattern-polyfill')
 }
 
 const drlCaptureRegexp = /^(?:dweb:\/\/)?(did:[^\/]+)(?:\/protocols\/([^\/]+)\/?)?/;
