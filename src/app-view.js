@@ -1,12 +1,8 @@
 import { LitElement, css, html } from 'lit'
 
-import litLogo from './assets/lit.svg'
-import appLogo from '/favicon.svg'
-
 import './components/pwa-badge'
 import './components/shoelace';
 import './components/connect-widget';
-
 
 import { $App } from './app';
 import { AppRouter } from './utils/router';

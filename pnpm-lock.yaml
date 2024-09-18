@@ -41,6 +41,12 @@ dependencies:
     version: 10.0.0
 
 devDependencies:
+  '@esbuild-plugins/node-globals-polyfill':
+    specifier: ^0.2.0
+    version: 0.2.3(esbuild@0.21.5)
+  '@rollup/plugin-node-resolve':
+    specifier: ^15.0.1
+    version: 15.2.3(rollup@2.79.1)
   '@vite-pwa/assets-generator':
     specifier: ^0.2.4
     version: 0.2.4
@@ -1354,6 +1360,14 @@ packages:
       '@leichtgewicht/ip-codec': 2.0.5
       utf8-codec: 1.0.0
     dev: false
+
+  /@esbuild-plugins/node-globals-polyfill@0.2.3(esbuild@0.21.5):
+    resolution: {integrity: sha512-r3MIryXDeXDOZh7ih1l/yE9ZLORCd5e8vWg02azWRGj5SPTuoh69A2AIyn0Z31V/kHBfZ4HgWJ+OK3GTTwLmnw==}
+    peerDependencies:
+      esbuild: '*'
+    dependencies:
+      esbuild: 0.21.5
+    dev: true
 
   /@esbuild/aix-ppc64@0.21.5:
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}

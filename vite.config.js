@@ -32,6 +32,9 @@ export default defineConfig({
 
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        globIgnores: [
+          'assets/icons/**'
+        ],
       },
 
       workbox: {

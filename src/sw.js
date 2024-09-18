@@ -3,7 +3,7 @@ import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from
 import { clientsClaim } from 'workbox-core'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 
-import { activatePolyfills } from '@web5/api';
+import { activatePolyfills } from '../node_modules/@web5/api/dist/esm/web-features.js';
 
 // self.__WB_MANIFEST is the default injection point
 precacheAndRoute(self.__WB_MANIFEST)
