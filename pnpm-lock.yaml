@@ -24,6 +24,9 @@ dependencies:
   '@web5/api':
     specifier: 0.0.0-next-b97dace-20240912134256
     version: 0.0.0-next-b97dace-20240912134256(ws@8.18.0)
+  '@web5/common':
+    specifier: ^1.0.2
+    version: 1.0.2
   '@web5/dids':
     specifier: 1.1.3
     version: 1.1.3
@@ -2253,6 +2256,16 @@ packages:
       level: 8.0.1
       multiformats: 13.1.0
       readable-stream: 4.4.2
+    dev: false
+
+  /@web5/common@1.0.2:
+    resolution: {integrity: sha512-SerGdrxZF47yidvhrRa8sGLEOunIlDHppxrtWYCuKMVgtQKgheEmaS4+xchGAc/mZggJX4LlwJbRuniIiSaXrw==}
+    engines: {node: '>=18.0.0'}
+    dependencies:
+      '@isaacs/ttlcache': 1.4.1
+      level: 8.0.1
+      multiformats: 13.1.0
+      readable-stream: 4.5.2
     dev: false
 
   /@web5/crypto@1.0.0:

@@ -1,5 +1,7 @@
 import { LitElement, css, html, nothing } from 'lit'
 
+import { Convert } from '@web5/common';
+
 import '../components/shoelace';
 import PageStyles from '../styles/page';
 import * as protocols from '../utils/protocols.js';
@@ -21,7 +23,7 @@ export class ConnectPage extends LitElement.with(State, Spinner, Query) {
 
   constructor() {
     super()
-    this.profileProtocolUri = encodeURIComponent(protocols.profile.uri)
+    this.profileProtocolEncoded = Convert.string(protocols.profile.uri).toBase64Url();
   }
 
   firstUpdated() {
@@ -63,7 +65,7 @@ export class ConnectPage extends LitElement.with(State, Spinner, Query) {
         </div>
         <div>is requesting permissions for this identity:</div>
         <div id="identity" ellipsis>
-          <sl-avatar image="${identity?.avatar || `https://dweb/${this.did}/read/protocols/${this.profileProtocolUri}/avatar`}" shape="circle" size="small"></sl-avatar>
+          <sl-avatar image="${identity?.avatar || `https://dweb/${this.did}/read/protocols/${this.profileProtocolEncoded}/avatar`}" shape="circle" size="small"></sl-avatar>
           ${(label ? label + '@' : '') + this.did}
         </div>
         ${this.permissions.reduce((templates, request) => {

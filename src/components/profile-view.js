@@ -1,6 +1,8 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { format, intervalToDuration, formatDuration } from "date-fns";
 
+import { Convert } from '@web5/common';
+
 import { App } from '../app.js';
 
 import * as protocols from '../utils/protocols.js';
@@ -126,7 +128,7 @@ export class ProfileView extends LitElement.with(State, Query) {
 
   constructor() {
     super();
-    this.profileProtocolEncoded = encodeURIComponent(protocols.profile.uri);
+    this.profileProtocolEncoded = Convert.string(protocols.profile.uri).toBase64Url();
     this.clearData();
   }
 

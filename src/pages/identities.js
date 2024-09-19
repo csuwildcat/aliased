@@ -1,4 +1,5 @@
 import { LitElement, css, html, nothing, render } from 'lit';
+import { Convert } from '@web5/common';
 
 import { App } from '../app.js';
 import * as protocols from '../utils/protocols.js';
@@ -31,7 +32,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
   constructor() {
     super();
     this.lastIdentityLabelSave = Date.now();
-    this.profileProtocolUri = encodeURIComponent(protocols.profile.uri)
+    this.profileProtocolEncoded = Convert.string(protocols.profile.uri).toBase64Url();
   }
 
   firstUpdated() {
@@ -129,7 +130,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
                 <li>
                   <div flex="center-y">
                     <a href="/profiles/${did}">
-                      <sl-avatar image="${identity.avatar || `https://dweb/${did}/read/protocols/${this.profileProtocolUri}/avatar`}" shape="circle" size="small"></sl-avatar>
+                      <sl-avatar image="${identity.avatar || `https://dweb/${did}/read/protocols/${this.profileProtocolEncoded}/avatar`}" shape="circle" size="small"></sl-avatar>
                       ${did}
                     </a> 
                     <sl-button detail-box-toggle circle size="small" @click="${this.toggleIdentityDetails}">
@@ -186,7 +187,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
           ${
             this.identityEndpointUpdate ?
               html`
-                <sl-avatar image="${this.identityEndpointUpdate.identity?.avatar || `https://dweb/${this.identityEndpointUpdate.identity.connectedDid}/read/protocols/${this.profileProtocolUri}/avatar`}" shape="circle" size="small"></sl-avatar>
+                <sl-avatar image="${this.identityEndpointUpdate.identity?.avatar || `https://dweb/${this.identityEndpointUpdate.identity.connectedDid}/read/protocols/${this.profileProtocolEncoded}/avatar`}" shape="circle" size="small"></sl-avatar>
                 <div>${this.identityEndpointUpdate.identity.connectedDid}</div>
               ` : nothing
           }

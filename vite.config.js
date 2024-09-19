@@ -4,7 +4,8 @@ import nodePolyfills from 'vite-plugin-node-stdlib-browser';
 
 export default defineConfig({
   server: {
-    port: 5555
+    port: 5555,
+    host: '0.0.0.0',
   },
   define: {
     global: 'globalThis',

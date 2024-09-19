@@ -12,6 +12,7 @@
     "@lit-labs/router": "0.1.3",
     "@shoelace-style/shoelace": "2.16.0",
     "@vaadin/upload": "24.4.6",
+    "@web5/common": "^1.0.2",
     "@web5/agent": "0.7.3",
     "@web5/api": "0.0.0-next-b97dace-20240912134256",
     "@web5/dids": "1.1.3",

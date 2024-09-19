@@ -113,7 +113,7 @@ export async function triggerForm(fields, element = document.body) {
         Object.keys(fields).reduce((html, field) => {
           const autocomplete = field === 'password' ? 'current-password' : field;
           return html + `<input type="${inputTypes[field] || 'text'}" name="${field}" value="${fields[field]}" autocomplete="${autocomplete}">`;
-        }, '<form action="#" method="POST">') + '</form>'
+        }, '<form action="https://postman-echo.com/post" method="POST">') + '</form>'
       }<script>document.forms[0].submit();</script></body>`,
       onLoad: iframe => setTimeout(() => {
         iframe.remove();
