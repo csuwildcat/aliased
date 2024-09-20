@@ -588,7 +588,7 @@ export class ProfileView extends LitElement.with(State, Query) {
         z-index: 2;
       }
 
-      #hero[src] {
+      #hero[src][loaded] {
         background: none;
       }
 
