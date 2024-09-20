@@ -7688,7 +7688,7 @@ sl-tab-group::part(tabs) {
         z-index: 2;
       }
 
-      #hero[src] {
+      #hero[src][loaded] {
         background: none;
       }
 
