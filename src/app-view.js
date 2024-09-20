@@ -133,7 +133,7 @@ export class AppView extends LitElement.with($App, State, Query) {
         height: var(--header-height);
         padding: 0 0.65rem;
         background: #17456d;
-        box-shadow: 0 0 2px 2px rgba(0 0 0 / 25%);
+        box-shadow: 0 0 2px 1px rgba(0 0 0 / 25%);
         user-select: none;
         z-index: 2;
       }

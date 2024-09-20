@@ -71,6 +71,7 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
     return html`
       <header id="search_bar" flex="center-y center-x" lock-on-scroll>
         <sl-input id="search_input"
+                  clearable
                   value="${ifDefined(this.did)}"
                   required
                   size="small"
@@ -114,9 +115,9 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
       #search_bar {
         position: sticky;
         top: var(--header-height);
-        height: 4.25rem;
+        height: 3.5rem;
         box-sizing: border-box;
-        padding: 0.2rem 1rem 0;
+        padding: 0.2rem 0.8rem 0;
         border-bottom: 1px solid rgba(255 255 255 / 1%);
         box-shadow: 0 2px 1px -1px rgba(0 0 0 / 40%);
         background: hsl(240deg 7% 15% / 90%);
@@ -175,11 +176,22 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
         .spinner-mixin {
           --inset: var(--header-height) 0 0 0;
         }
-      }
+      }  
 
       @media(max-width: 500px) {
+
+        :host {
+          background: var(--grey);
+        }
+
         :host > section {
           padding: 0;
+        }
+        
+        profile-view {
+          border: none;
+          box-shadow: none;
+          background: none;
         }
       }
     `

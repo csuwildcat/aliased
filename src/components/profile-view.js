@@ -175,7 +175,9 @@ export class ProfileView extends LitElement.with(State, Query) {
       this.social = records[0];
       this.career = records[1];
       this.socialData = this.social?.cache?.json || this.socialData;
+      
       this.careerData = this.career?.cache?.json || this.careerData;
+      console.log(this.careerData);
       this.loadingError = false;
       this.loaded = true;
       DOM.fireEvent(this, 'profile-view-load-success')
@@ -272,6 +274,7 @@ export class ProfileView extends LitElement.with(State, Query) {
     const today = new Date();
     const now = today.getTime();
     let latestJob = { startTime: now, endTime: 0 };
+    console.log(this?.careerData?.jobs?.length);
     const sortedJobs = this?.careerData?.jobs?.reduce((obj, job) => {
       const employer = job?.employer?.trim().toLowerCase() || '';
       (obj[employer] = obj[employer] || []).push(job)
@@ -282,6 +285,11 @@ export class ProfileView extends LitElement.with(State, Query) {
       }
       return obj;
     }, {})
+    const emptySections = {
+      bio: !this?.socialData?.bio,
+      jobs: !this?.careerData?.jobs?.length,
+      apps: !Object.keys(this?.socialData?.apps || {}).length
+    }
 
     return html`
 
@@ -335,7 +343,7 @@ export class ProfileView extends LitElement.with(State, Query) {
               <h3>About</h3>
               <sl-icon-button class="edit-button" name="pencil" variant="default" size="medium" @click="${ e => this.profileEditModal.show() }"></sl-icon-button>
             </header>
-            <p class="section-content" empty-text="Tell people about yourself" ?empty="${!this.socialData.bio}">${this.socialData.bio || nothing}</p>
+            <p class="section-content" empty-text="Tell people about yourself" ?empty="${emptySections.bio}">${this.socialData.bio || nothing}</p>
           </section>
 
           <section id="profile_social">
@@ -344,7 +352,7 @@ export class ProfileView extends LitElement.with(State, Query) {
               <h3>Social</h3>
               <sl-icon-button class="edit-button" name="pencil" variant="default" size="medium" @click="${ e => this.profileEditModal.show() }"></sl-icon-button>
             </header>
-            <div class="section-content" empty-text="Add social links" ?empty="${!Object.values(this.socialData.apps || {}).length}">
+            <div class="section-content" empty-text="Add social links" ?empty="${emptySections.apps}">
               ${Object.entries(this.socialData.apps).map(app => {
                 const name = app[0];
                 const map = socialApps[name];
@@ -359,7 +367,7 @@ export class ProfileView extends LitElement.with(State, Query) {
               <h3>Career</h3>
               <sl-icon-button class="edit-button" name="plus-lg" variant="default" size="medium" @click="${ e => this.showJobModal() }"></sl-icon-button>
             </header>
-            <detail-box id="job_groups" flex="column-reverse end" class="section-content" empty-text="Where have you worked?" ?empty="${!this.careerData?.jobs?.length}">
+            <detail-box id="job_groups" flex="column-reverse end" class="section-content" empty-text="Where have you worked?" ?empty="${emptySections.jobs}">
               ${
                 Object.keys(sortedJobs).map((employer, i) => {
                   const group = sortedJobs[employer] = sortedJobs[employer].sort((a, b) => b.endTime - a.endTime);
@@ -399,7 +407,14 @@ export class ProfileView extends LitElement.with(State, Query) {
                 })
               }
             </detail-box>
-          </section>  
+          </section> 
+
+          ${!this.owner && emptySections.bio && emptySections.jobs && emptySections.apps ? html`
+            <div id="empty_profile_placeholder" default-content="placeholder">
+              <sl-icon name="incognito"></sl-icon>
+              <p>Looks like someone is shy</p>
+            </div>
+          ` : nothing}
         </sl-tab-panel>
 
         <sl-tab-panel id="threads_panel" name="threads" ?active="${this.panel === 'threads' || nothing}">
@@ -419,13 +434,13 @@ export class ProfileView extends LitElement.with(State, Query) {
           </div>
         </sl-tab-panel>
 
-        ${ !this.owner ? nothing : html`
+        <!-- ${ !this.owner ? nothing : html`
           <sl-tab-panel name="notifications" ?active="${this.panel === 'notifications' || nothing}">
             ${[].map(invite => {
               return invite.initialWrite ? nothing : html`<invite-item .invite="${invite}"></invite-item>`
             })}
           </sl-tab-panel>
-        `}
+        `} -->
       </sl-tab-group>
 
       <sl-dialog id="profile_edit_modal" class="page-dialog" label="Edit Profile" placement="start">
@@ -558,7 +573,7 @@ export class ProfileView extends LitElement.with(State, Query) {
       #hero {
         position: relative;
         width: 100%;
-        height: var(--avatar-size);
+        height: calc(var(--avatar-size) * 1.3);
         background: var(--deterministic-background);
       }
 
@@ -685,9 +700,13 @@ export class ProfileView extends LitElement.with(State, Query) {
         flex: 1;
       }
 
+      #empty_profile_placeholder sl-icon {
+        margin-bottom: 0;
+      }
+
       #tabs sl-tab-panel [default-content~="placeholder"]{
         flex: 1;
-        padding: 0 0 5rem;
+        padding: 0 0 2rem;
       }
 
       #profile_panel > section {
