@@ -1,4 +1,6 @@
 
+import { Convert } from '@web5/common';
+
 if (!globalThis.URLPattern) {
   import('urlpattern-polyfill')
 }
@@ -99,7 +101,7 @@ const natives = {
     create(did, { protocol = '', action = '', path = '', params = {}, hash = '', flushCache = false }){
       let url = `https://dweb/${did}${action ? '/' + action : '' }`;
       if (protocol) {
-        url += '/protocols/' + encodeURIComponent(protocol);
+        url += '/protocols/' + Convert.string(protocol).toBase64Url();
       }
       url += natives.unslash(path.startsWith('/') ? path : '/' + path);
       const searchParams = new URLSearchParams();

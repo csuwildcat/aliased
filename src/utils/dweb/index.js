@@ -2,6 +2,7 @@
 import { Web5 } from '@web5/api';
 import { DidJwk, DidDht, BearerDid } from '@web5/dids';
 import { Web5UserAgent } from '@web5/user-agent';
+import { Convert } from '@web5/common';
 
 import {
   storage,
@@ -303,7 +304,7 @@ export const DWeb = globalThis.DWeb = {
         if (!event.isTrusted) throw 'Connecting to a web wallet must be initiated by a user action';
         connectInstance = { window: createPopup(), reject};
         const progressCallback = options.onProgress;
-        const connectData = await fetch(`https://dweb/${did}/read/protocols/${encodeURIComponent('https://areweweb5yet.com/protocols/profile')}/connect`).then(res => {
+        const connectData = await fetch(`https://dweb/${did}/read/protocols/${Convert.string('https://areweweb5yet.com/protocols/profile').toBase64Url()}/connect`).then(res => {
           return res.json();
         }).catch(e => {});
         const wallets = connectData?.webWallets;
