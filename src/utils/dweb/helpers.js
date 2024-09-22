@@ -107,6 +107,7 @@ export async function registerEndpoints(agent, identity, dwnEndpoints = [], regi
 }
 
 export async function installProtocol(dwn, def, overwrite = false) {
+  console.log(dwn);
   try {
     let definition;
     const installed = await dwn.protocols.query({ message: {} });
@@ -123,7 +124,7 @@ export async function installProtocol(dwn, def, overwrite = false) {
       const protocol = await dwn.protocols.configure({
         message: { definition }
       })
-      await protocol.send()
+      await protocol.send(dwn.connectedDid)
     }
   }
   catch (e) {
