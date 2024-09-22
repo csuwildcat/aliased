@@ -6,7 +6,7 @@ import { Convert } from '@web5/common';
 import { App } from '../app.js';
 
 import * as protocols from '../utils/protocols.js';
-import { hashToGradient } from '../utils/colors.js';
+import { generateGradients } from '../utils/colors.js';
 import { socialApps } from '../utils/content.js';
 import { natives } from '../utils/helpers.js';
 import { DOM } from '../utils/dom.js';
@@ -165,7 +165,7 @@ export class ProfileView extends LitElement.with(State, Query) {
       this.owner = this.identities[did];
       this.datastore = this.owner?.datastore || Object.values(this.identities)[0]?.datastore;
       this.clearData();
-      this.heroImage.style.setProperty('--deterministic-background', hashToGradient(did.split(':')[2]));
+      this.heroImage.style.setProperty('--deterministic-background', generateGradients(did.split(':')[2]));
       const records = await Promise.all([
         this.datastore.getSocial({ from: this.owner ? undefined : did }),
         this.datastore.getCareer({ from: this.owner ? undefined : did }),
@@ -332,9 +332,9 @@ export class ProfileView extends LitElement.with(State, Query) {
       <sl-tab-group id="tabs" flex="fill" @sl-tab-show="${this.onTabShow}">
         <sl-tab slot="nav" panel="profile" ?active="${this.panel === 'profile' || nothing}">Profile</sl-tab>
         <!-- <sl-tab slot="nav" panel="threads" ?active="${this.panel === 'threads' || nothing}">Threads</sl-tab> -->
-        ${ !this.owner ? nothing : html`
+        <!-- ${ !this.owner ? nothing : html`
           <sl-tab slot="nav" panel="notifications" ?active="${this.panel === 'notifications' || nothing}">Notifications</sl-tab>
-        `}
+        `} -->
 
         <sl-tab-panel id="profile_panel" name="profile" ?active="${this.panel === 'profile' || nothing}">
           <section id="profile_about">

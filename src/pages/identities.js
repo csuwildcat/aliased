@@ -90,7 +90,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
           }, []);
         }
         entry.serviceEndpoint = endpoints;
-      })
+      });
       if (autoClose) this.closeEndpointModal();
       return result;
     }
