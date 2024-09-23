@@ -6,7 +6,7 @@ import { Convert } from '@web5/common';
 import { App } from '../app.js';
 
 import * as protocols from '../utils/protocols.js';
-import { generateGradients } from '../utils/colors.js';
+import { generateGradient } from '../utils/colors.js';
 import { socialApps } from '../utils/content.js';
 import { natives } from '../utils/helpers.js';
 import { DOM } from '../utils/dom.js';
@@ -165,7 +165,7 @@ export class ProfileView extends LitElement.with(State, Query) {
       this.owner = this.identities[did];
       this.datastore = this.owner?.datastore || Object.values(this.identities)[0]?.datastore;
       this.clearData();
-      this.heroImage.style.setProperty('--deterministic-background', generateGradients(did.split(':')[2]));
+      this.heroImage.style.setProperty('--deterministic-background', generateGradient(did.split(':')[2]));
       const records = await Promise.all([
         this.datastore.getSocial({ from: this.owner ? undefined : did }),
         this.datastore.getCareer({ from: this.owner ? undefined : did }),
@@ -183,6 +183,7 @@ export class ProfileView extends LitElement.with(State, Query) {
       DOM.fireEvent(this, 'profile-view-load-success')
     }
     catch(e) {
+      console.log(e);
       this.loadingError = true;
       DOM.fireEvent(this, 'profile-view-load-error')
     }

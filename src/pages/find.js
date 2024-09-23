@@ -77,6 +77,7 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
                   size="small"
                   placeholder="Enter a DID to view a profile"
                   pattern="did:dht:[a-zA-Z0-9]+"
+                  @sl-clear="${ e => this.did = '' }"
                   @keydown="${ e => e.key === 'Enter' && this.lookupProfile() }"
                   @keypress="${ e => {
                     return !(/^[a-zA-Z0-9_\-:.]+$/.test(String.fromCharCode(e.charCode || e.which))) ? e.preventDefault() : true
@@ -187,7 +188,7 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
         :host > section {
           padding: 0;
         }
-        
+
         profile-view {
           border: none;
           box-shadow: none;

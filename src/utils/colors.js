@@ -1,33 +1,31 @@
-export function generateGradients(byteString) {
+export function generateGradient(byteString) {
   if (byteString.length < 32) {
     throw new Error("Input must be at least 32 bytes long.");
   }
 
   const byteValues = Array.from(byteString, (char) => char.charCodeAt(0));
+  const saturation = 85 + (byteValues[0] % 15); // Saturation between 85-100%
+  const lightness = 50 + (byteValues[1] % 20); // Lightness between 50-70%
 
-  // Generate two adjacent but distinct hues
-  const hue1 = (byteValues[0] * 1.4) % 360; // Base hue
-  const hueOffset = 30 + (byteValues[1] % 30); // Offset between 30 and 60 degrees for distinction
-  const hue2 = (hue1 + hueOffset) % 360; // Second hue, adjacent but distinct
-  const saturation = 85 + (byteValues[2] % 15); // Saturation between 85-100%
-  const lightness = 50 + (byteValues[3] % 20); // Lightness between 50-70%
-  const alpha = 0.7; // Set alpha transparency for blending
+  // Function to generate a color based on a base hue and offset
+  const generateColor = (baseHue, offset) => {
+    const hue = (baseHue + offset) % 360; // Adjust hue with offset
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  };
 
-  // Colors with alpha for transparency
-  const color1 = `hsla(${hue1}, ${saturation}%, ${lightness}%, ${alpha})`;
-  const color2 = `hsla(${hue2}, ${saturation}%, ${lightness}%, ${alpha})`;
+  // Base hue for the gradient
+  const baseHue = (byteValues[2] * 1.4) % 360;
 
-  // Generate distinct center points based on byte values for each gradient
-  const x1 = (byteValues[4] % 81) + 10; // X coordinate for the first gradient between 10% and 90%
-  const y1 = (byteValues[5] % 81) + 10; // Y coordinate for the first gradient between 10% and 90%
-  const x2 = (byteValues[6] % 81) + 10; // X coordinate for the second gradient between 10% and 90%
-  const y2 = (byteValues[7] % 81) + 10; // Y coordinate for the second gradient between 10% and 90%
+  // Generate three colors, skipping a band (60 degrees) between each
+  const color1 = generateColor(baseHue, 0); // First color
+  const color2 = generateColor(baseHue, 60); // Second color, skipping one band
+  const color3 = generateColor(baseHue, 120); // Third color, skipping another band
 
-  // Adjust positions to ensure the gradients are not placed too closely to each other
-  if (Math.abs(x1 - x2) < 20) x2 = (x2 + 20) % 90 + 10;
-  if (Math.abs(y1 - y2) < 20) y2 = (y2 + 20) % 90 + 10;
+  // Determine the gradient angle based on the input string
+  const gradientAngle = byteValues[3] % 360; // Angle between 0-359 degrees
 
-  // Create the gradients with alpha colors to ensure full coverage and blending
-  return `radial-gradient(circle at ${x1}% ${y1}%, ${color1} 0%, ${color2} 50%),
-          radial-gradient(circle at ${x2}% ${y2}%, ${color2} 0%, ${color1} 50%)`;
+  // Create the linear gradient string
+  const linearGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
+
+  return linearGradient;
 }
