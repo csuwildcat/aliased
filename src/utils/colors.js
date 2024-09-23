@@ -3,29 +3,24 @@ export function generateGradient(byteString) {
     throw new Error("Input must be at least 32 bytes long.");
   }
 
+  const colorNumber = 3;
+  const colorSeparation = 60;
   const byteValues = Array.from(byteString, (char) => char.charCodeAt(0));
-  const saturation = 85 + (byteValues[0] % 15); // Saturation between 85-100%
-  const lightness = 50 + (byteValues[1] % 20); // Lightness between 50-70%
-
-  // Function to generate a color based on a base hue and offset
-  const generateColor = (baseHue, offset) => {
-    const hue = (baseHue + offset) % 360; // Adjust hue with offset
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  };
-
-  // Base hue for the gradient
+  const saturation = 80 + (byteValues[0] % 15); // Saturation between 85-100%
+  const lightness = 45 + (byteValues[1] % 20); // Lightness between 50-70%
   const baseHue = (byteValues[2] * 1.4) % 360;
 
-  // Generate three colors, skipping a band (60 degrees) between each
-  const color1 = generateColor(baseHue, 0); // First color
-  const color2 = generateColor(baseHue, 60); // Second color, skipping one band
-  const color3 = generateColor(baseHue, 120); // Third color, skipping another band
+  // Generate three colors, skipping a colorSeparation distance on the color wheel
+  const bands = Array.from({ length: colorNumber }).map((_, i) => {
+    const hue = (baseHue + i * colorSeparation) % 360; // Adjust hue with offset
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  }).join(', ');
 
-  // Determine the gradient angle based on the input string
-  const gradientAngle = byteValues[3] % 360; // Angle between 0-359 degrees
+  let gradientAngle = byteValues[3] % 180; // Initial angle range between 0-179 degrees
 
-  // Create the linear gradient string
-  const linearGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
+  // Shift the angle to fit within the left or right side constraints (45-135 and 225-315 degrees)
+  gradientAngle = gradientAngle < 45 ? gradientAngle += 315 : gradientAngle > 135 ? gradientAngle += 90 : gradientAngle;
 
-  return linearGradient;
+  return `linear-gradient(${gradientAngle}deg, ${bands})`;
+
 }
