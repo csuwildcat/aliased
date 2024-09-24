@@ -87,7 +87,6 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
 
   connectedCallback() {
     super.connectedCallback();
-    this.startCamera();
   }
 
   disconnectedCallback() {

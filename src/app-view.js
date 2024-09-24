@@ -35,7 +35,8 @@ export class AppView extends LitElement.with($App, State, Query) {
     identitiesPage: ['#identities', true],
     restoreIdentityModal: ['#restore_identity_modal', true],
     restoreUploader: ['#restore_uploader', true],
-    qrScanner: ['#qr-scanner', true]
+    qrScanner: ['#qr_scanner', true],
+    qrScannerModal: ['#qr_scanner_modal', true]
   }
 
   constructor() {
@@ -130,9 +131,10 @@ export class AppView extends LitElement.with($App, State, Query) {
         <sl-button id="pin_close" variant="success" @click="${() => this.pinModal.hide()}">Done</sl-button>
       </sl-dialog>
 
-      <sl-dialog id="qr-scanner" label="Scan QR Code" placement="start" fit-content>
-        <p>Scan a QR code to connect to a DWA.</p>
-        <qrcode-scanner @scanned-connect="${this.handleWalletConnectFlow}"></qrcode-scanner>
+      <sl-dialog id="qr_scanner_modal" label="Scan QR Code" placement="start" fit-content
+        @sl-show="${() => this.qrScanner.startCamera()}"
+        @sl-hide="${() => this.qrScanner.scanner.stop()}" >
+        <qrcode-scanner id="qr_scanner" @scanned-connect="${this.handleWalletConnectFlow}"></qrcode-scanner>
       </sl-dialog>
 
       <sl-dialog id="connect_request_modal" label="ConnectPage" placement="start" fit-content>
