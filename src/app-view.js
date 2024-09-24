@@ -3,6 +3,8 @@ import { LitElement, css, html } from 'lit'
 import './components/pwa-badge'
 import './components/shoelace';
 import './components/connect-widget';
+import './components/connect-request';
+import './components/qr-scanner';
 
 import { $App } from './app';
 import { AppRouter } from './utils/router';
@@ -16,6 +18,7 @@ import './pages/connect';
 import './pages/find';
 import './pages/identities';
 import PageStyles from './styles/page';
+import { Oidc } from '@web5/agent';
 
 export class AppView extends LitElement.with($App, State, Query) {
 
@@ -24,11 +27,15 @@ export class AppView extends LitElement.with($App, State, Query) {
     nav: ['#nav', true],
     pages: ['#pages', true],
     connectPage: ['#connect', true],
+    connectRequestModal: ['#connect_request_modal', true],
+    pinModal: ['#pin_modal', true],
+    pinModalContent: ['#pin_modal_content', true],
     profilePage: ['#profile', true],
     directoryPage: ['#directory', true],
     identitiesPage: ['#identities', true],
     restoreIdentityModal: ['#restore_identity_modal', true],
     restoreUploader: ['#restore_uploader', true],
+    qrScanner: ['#qr-scanner', true]
   }
 
   constructor() {
@@ -53,6 +60,25 @@ export class AppView extends LitElement.with($App, State, Query) {
         },
       ]
     });
+  }
+
+  async handleWalletConnectFlow (e) {
+    const connectionURI = new URL(e.detail.data);
+    const request_uri = connectionURI.searchParams.get('request_uri');
+    const encryption_key = connectionURI.searchParams.get('encryption_key');
+    const decryptedConnectionRequest = await Oidc.getAuthRequest(
+      request_uri,
+      encryption_key
+    );
+
+    const connectRequest = document.createElement('connect-request');
+    connectRequest.request = decryptedConnectionRequest;
+    connectRequest.addEventListener('connect-pin', async (e) => {
+      this.pinModalContent.innerHTML = e.detail.pin;
+      this.pinModal.show();
+    });
+    this.connectRequestModal.appendChild(connectRequest);
+    this.connectRequestModal.show();
   }
 
   async handleRestoreUpload(e) {
@@ -96,6 +122,20 @@ export class AppView extends LitElement.with($App, State, Query) {
 
       <sl-dialog id="connect_modal" label="Connect" placement="start" fit-content ?open="${this?.connectModal?.open && this.identity && false}">
         <connect-widget></connect-widget>
+      </sl-dialog>
+
+      <sl-dialog id="pin_modal" label="ConnectPin" placement="start" fit-content>
+        <div id="pin_modal_content" flex="center-y column">
+        </div> 
+        <sl-button id="pin_close" variant="success" @click="${() => this.pinModal.hide()}">Done</sl-button>
+      </sl-dialog>
+
+      <sl-dialog id="qr-scanner" label="Scan QR Code" placement="start" fit-content>
+        <p>Scan a QR code to connect to a DWA.</p>
+        <qrcode-scanner @scanned-connect="${this.handleWalletConnectFlow}"></qrcode-scanner>
+      </sl-dialog>
+
+      <sl-dialog id="connect_request_modal" label="ConnectPage" placement="start" fit-content>
       </sl-dialog>
 
       <sl-dialog id="restore_identity_modal" label="Restore an Identity" placement="start" fit-content>

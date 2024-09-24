@@ -17,6 +17,8 @@ import {
   createPopup,
   createHiddenFrame
 } from './dom';
+import { Oidc } from '@web5/agent';
+import { CryptoUtils } from '@web5/crypto';
 
 let initialize;
 let connectInstance;
@@ -405,6 +407,18 @@ export const DWeb = globalThis.DWeb = {
       }).finally(() => {
         DWeb.connect.abort();
       })
+    },
+    async oidcConnect(did, request) {
+      const pin = CryptoUtils.randomPin({ length: 4 });
+      const agent = await getAgent();
+      await Oidc.submitAuthResponse(
+        did,
+        request,
+        pin,
+        agent,
+      );
+
+      return pin;
     }
   }
 }
