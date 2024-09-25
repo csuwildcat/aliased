@@ -435,6 +435,13 @@ export class ProfileView extends LitElement.with(State, Query) {
           </div>
         </sl-tab-panel>
 
+        <!-- ${ !this.owner ? nothing : html`
+          <sl-tab-panel name="notifications" ?active="${this.panel === 'notifications' || nothing}">
+            ${[].map(invite => {
+              return invite.initialWrite ? nothing : html`<invite-item .invite="${invite}"></invite-item>`
+            })}
+          </sl-tab-panel>
+        `} -->
       </sl-tab-group>
 
       <sl-dialog id="profile_edit_modal" class="page-dialog" label="Edit Profile" placement="start">
