@@ -25,17 +25,6 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
     super()
   }
 
-  willUpdate(props) {
-    if (props.has('active')) {
-      if (this.active) {
-        this.startCamera();
-      }
-      else {
-        this.scanner.stop();
-      }
-    }
-  }
-
   render() {
     return html`
       <div id="video-container">
