@@ -10,6 +10,9 @@ export default defineConfig({
   define: {
     global: 'globalThis',
   },
+  build: {
+    target: ['esnext', 'chrome89', 'edge89', 'firefox89', 'safari15'], // Modern browser versions
+  },
   plugins: [
     nodePolyfills(),
     VitePWA({

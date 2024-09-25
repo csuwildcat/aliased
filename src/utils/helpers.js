@@ -2,7 +2,7 @@
 import { Convert } from '@web5/common';
 
 if (!globalThis.URLPattern) {
-  import('urlpattern-polyfill')
+  await import('urlpattern-polyfill')
 }
 
 const drlCaptureRegexp = /^(?:dweb:\/\/)?(did:[^\/]+)(?:\/protocols\/([^\/]+)\/?)?/;
