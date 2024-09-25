@@ -173,7 +173,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
               <sl-button id="restore_identity_button" variant="primary" size="small" @click="${ e => App.restoreIdentityModal.show() }">
                 <sl-icon slot="prefix" name="person-up"></sl-icon> Restore an Identity
               </sl-button>
-              <sl-button id="restore_identity_button" variant="primary" size="small" @click="${ e => App.qrScanner.show()}">
+              <sl-button id="restore_identity_button" variant="primary" size="small" @click="${ e => App.qrScannerModal.show()}">
                 <sl-icon slot="prefix" name="window-stack"></sl-icon> Connect an App
               </sl-button>
             </div>
