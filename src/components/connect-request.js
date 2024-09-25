@@ -27,7 +27,15 @@ export class ConnectRequest extends LitElement.with(State, Spinner, Query) {
   }
 
   firstUpdated() {
-    this.did = Object.keys(this.identities)[0];
+    this.did = this.identities ? Object.keys(this.identities)[0] : '';
+  }
+
+  willUpdate(props) {
+    const propIdentities = props.get('identities');
+    const propsDid = propIdentities ? Object.keys(propIdentities)[0] : '';
+    if (this.did !== propsDid) {
+      this.did = propsDid;
+    }
   }
 
   #allow;
