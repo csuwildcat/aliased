@@ -171,6 +171,4 @@ const natives = {
   }
 }
 
-globalThis.parseDrl = natives.drl.parse;
-
 export { natives };
