@@ -31,25 +31,23 @@ export class ConnectRequest extends LitElement.with(State, Spinner, Query) {
   }
 
   willUpdate(props) {
-    const propIdentities = props.get('identities');
-    const propsDid = propIdentities ? Object.keys(propIdentities)[0] : '';
-    if (this.did !== propsDid) {
-      this.did = propsDid;
+    if (props.has('identities')) {
+      this.did = this.identities ? Object.keys(this.identities)[0] : '';
     }
   }
 
   #allow;
   async allow() {
-    console.log('selected', this.did);
-    console.log('request', this.request);
     this.acceptButton.loading = true;
     const pin = await DWeb.connect.oidcConnect(this.did, this.request);
     DOM.fireEvent(this, 'connect-pin', { detail: { pin } });
     this.parentElement.hide();
+    this.acceptButton.loading = false;
   }
 
   #deny;
   deny() {
+    this.parentElement.hide();
   }
 
 
