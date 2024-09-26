@@ -7245,7 +7245,7 @@ sl-tab-group::part(tabs) {
 
       <h1>Scan from File:</h1>
       <input type="file" id="file-selector" @change="${At=>{const xt=this.files[0];xt&&e$1.scanImage(xt,{returnDetailedScanResult:!0}).then(Bt=>this.setResult(Bt))}}">
-    `}setResult(At){At.data&&(this.stop(),DOM$1.fireEvent(this,"scan",{detail:{data:At.data}}))}start(){e$1.hasCamera().then(At=>{At?this.scanner.start():alert("No camera found.")})}stop(){this.scanner&&this.scanner.stop()}firstUpdated(){this.scanner=new e$1(this.video,At=>this.setResult(At),{onDecodeError:At=>{},highlightScanRegion:!0,highlightCodeOutline:!0}),this.videoContainer.append(this.scanner.$canvas)}}customElements.define("qrcode-scanner",QRCodeScanner);/**
+    `}setResult(At){At.data&&(this.stop(),DOM$1.fireEvent(this,"scan",{detail:{data:At.data}}))}start(){e$1.hasCamera().then(At=>{At?this.scanner.start():alert("No camera found.")})}stop(){var At,xt;(xt=(At=this==null?void 0:this.scanner)==null?void 0:At.stop)==null||xt.call(At)}firstUpdated(){this.scanner=new e$1(this.video,At=>this.setResult(At),{onDecodeError:At=>{},highlightScanRegion:!0,highlightCodeOutline:!0}),this.videoContainer.append(this.scanner.$canvas)}}customElements.define("qrcode-scanner",QRCodeScanner);/**
  * @license
  * Copyright 2021 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
