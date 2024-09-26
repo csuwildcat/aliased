@@ -7231,21 +7231,21 @@ sl-tab-group::part(tabs) {
     :host {
       display: block;
     }
-  `;static properties={active:{type:Boolean}};static query={video:["#qr-video",!0],videoContainer:["#video-container",!0],camList:["#cam-list",!0],fileSelector:["#file-selector",!0]};constructor(){super()}render(){return ke$2`
+  `;static properties={on:{type:Boolean,reflect:!0}};static query={video:["#qr-video",!0],videoContainer:["#video-container",!0],camList:["#cam-list",!0],fileSelector:["#file-selector",!0]};constructor(){super()}render(){return ke$2`
       <div id="video-container">
-          <video id="qr-video"></video>
+        <video id="qr-video"></video>
       </div>
       <div>
-          <b>Select Camera:</b>
-          <select id="cam-list">
-              <option value="environment" selected>Environment Facing (default)</option>
-              <option value="user">User Facing</option>
-          </select>
+        <b>Select Camera:</b>
+        <select id="cam-list" @change="${At=>this.scanner.setCamera(At.target.value)}">
+          <option value="environment" selected>Environment Facing (default)</option>
+          <option value="user">User Facing</option>
+        </select>
       </div>
 
       <h1>Scan from File:</h1>
-      <input type="file" id="file-selector">
-    `}setResult(At){At.data&&(this.scanner.stop(),DOM$1.fireEvent(this,"scanned-connect",{detail:{data:At.data}}),this.parentElement.hide())}startCamera(){e$1.hasCamera().then(At=>{At?this.scanner.start():alert("No camera found.")})}firstUpdated(){this.scanner=new e$1(this.video,At=>this.setResult(At),{onDecodeError:At=>{},highlightScanRegion:!0,highlightCodeOutline:!0}),this.videoContainer.appendChild(this.scanner.$canvas,this.videoContainer.firstChild),this.camList.addEventListener("change",At=>{this.scanner.setCamera(At.target.value)}),this.fileSelector.addEventListener("change",At=>{const xt=this.fileSelector.files[0];xt&&e$1.scanImage(xt,{returnDetailedScanResult:!0}).then(Bt=>this.setResult(Bt))})}}customElements.define("qrcode-scanner",QRCodeScanner);/**
+      <input type="file" id="file-selector" @change="${At=>{const xt=this.files[0];xt&&e$1.scanImage(xt,{returnDetailedScanResult:!0}).then(Bt=>this.setResult(Bt))}}">
+    `}setResult(At){At.data&&(this.on=!1,DOM$1.fireEvent(this,"scan",{detail:{data:At.data}}))}start(){e$1.hasCamera().then(At=>{At?this.scanner.start():alert("No camera found.")})}stop(){this.scanner&&this.scanner.stop()}firstUpdated(){this.scanner=new e$1(this.video,At=>this.setResult(At),{onDecodeError:At=>{},highlightScanRegion:!0,highlightCodeOutline:!0}),this.videoContainer.append(this.scanner.$canvas)}willUpdate(At){At.has("on")&&this.on?this.start():this.stop()}}customElements.define("qrcode-scanner",QRCodeScanner);/**
  * @license
  * Copyright 2021 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
@@ -10363,11 +10363,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </sl-dialog>
 
       <sl-dialog id="qr_scanner_modal" label="Scan QR Code" placement="start" fit-content
-        @sl-show="${()=>{var xt;return(xt=this.qrScanner)==null?void 0:xt.startCamera()}}"
-        @sl-hide="${()=>{var xt;return(xt=this.qrScanner)==null?void 0:xt.scanner.stop()}}"
+        @sl-show="${()=>this.qrScanner.on=!0}"
+        @sl-hide="${()=>this.qrScanner.on=!1}"
         >
         <p>Scan a QR code to connect to a DWA.</p>
-        <qrcode-scanner id="qr_scanner" @scanned-connect="${this.handleWalletConnectFlow}"></qrcode-scanner>
+        <qrcode-scanner id="qr_scanner" @scan="${xt=>{this.qrScannerModal.hide(),this.handleWalletConnectFlow(xt)}}"></qrcode-scanner>
       </sl-dialog>
 
       <sl-dialog id="connect_request_modal" label="ConnectPage" placement="start" fit-content>
