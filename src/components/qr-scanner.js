@@ -11,7 +11,7 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
   `;
 
   static properties = {
-    active: { type: Boolean }
+    on: { type: Boolean, reflect: true }
   }
 
   static query = {
@@ -28,30 +28,35 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
   render() {
     return html`
       <div id="video-container">
-          <video id="qr-video"></video>
+        <video id="qr-video"></video>
       </div>
       <div>
-          <b>Select Camera:</b>
-          <select id="cam-list">
-              <option value="environment" selected>Environment Facing (default)</option>
-              <option value="user">User Facing</option>
-          </select>
+        <b>Select Camera:</b>
+        <select id="cam-list" @change="${ e => this.scanner.setCamera(e.target.value) }">
+          <option value="environment" selected>Environment Facing (default)</option>
+          <option value="user">User Facing</option>
+        </select>
       </div>
 
       <h1>Scan from File:</h1>
-      <input type="file" id="file-selector">
+      <input type="file" id="file-selector" @change="${ e => {
+        const file = this.files[0];
+        if (file) {
+          QrScanner.scanImage(file, { returnDetailedScanResult: true })
+            .then(result => this.setResult(result));
+        }
+      }}">
     `;
   }
 
   setResult(result) {
     if (result.data) {
-      this.scanner.stop();
-      DOM.fireEvent(this, 'scanned-connect', { detail: { data: result.data } });
-      this.parentElement.hide();
+      this.on = false;
+      DOM.fireEvent(this, 'scan', { detail: { data: result.data } });
     }
   }
 
-  startCamera() {
+  start() {
     QrScanner.hasCamera().then(hasCamera => {
       if (!hasCamera) {
         //TODO: Alert differently
@@ -61,9 +66,14 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
       }
     });
   }
+  
+  stop() {
+    if (this.scanner) {
+      this.scanner.stop();
+    }
+  }
 
   firstUpdated() {
-
     // ####### Web Cam Scanning #######
     this.scanner = new QrScanner(this.video, result => this.setResult(result), {
         onDecodeError: error => { },
@@ -71,22 +81,11 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
         highlightCodeOutline: true,
     });
 
-    this.videoContainer.appendChild(this.scanner.$canvas, this.videoContainer.firstChild);
+    this.videoContainer.append(this.scanner.$canvas);
+  }
 
-    this.camList.addEventListener('change', event => {
-        this.scanner.setCamera(event.target.value);
-    });
-
-    // ####### File Scanning #######
-
-    this.fileSelector.addEventListener('change', event => {
-        const file = this.fileSelector.files[0];
-        if (!file) {
-            return;
-        }
-        QrScanner.scanImage(file, { returnDetailedScanResult: true })
-            .then(result => this.setResult(result));
-    });
+  willUpdate(props) {
+    props.has('on') && this.on ? this.start() : this.stop();
   }
 }
 

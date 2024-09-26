@@ -132,11 +132,14 @@ export class AppView extends LitElement.with($App, State, Query) {
       </sl-dialog>
 
       <sl-dialog id="qr_scanner_modal" label="Scan QR Code" placement="start" fit-content
-        @sl-show="${() => this.qrScanner?.startCamera()}"
-        @sl-hide="${() => this.qrScanner?.scanner.stop()}"
+        @sl-show="${() => this.qrScanner.on = true}"
+        @sl-hide="${() => this.qrScanner.on = false}"
         >
         <p>Scan a QR code to connect to a DWA.</p>
-        <qrcode-scanner id="qr_scanner" @scanned-connect="${this.handleWalletConnectFlow}"></qrcode-scanner>
+        <qrcode-scanner id="qr_scanner" @scan="${e => {
+          this.qrScannerModal.hide();
+          this.handleWalletConnectFlow(e);
+        }}"></qrcode-scanner>
       </sl-dialog>
 
       <sl-dialog id="connect_request_modal" label="ConnectPage" placement="start" fit-content>
