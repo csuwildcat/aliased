@@ -64,9 +64,7 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
   }
   
   stop() {
-    if (this.scanner) {
-      this.scanner.stop();
-    }
+    this?.scanner?.stop?.();
   }
 
   firstUpdated() {
