@@ -10,10 +10,6 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
     }
   `;
 
-  static properties = {
-    on: { type: Boolean, reflect: true }
-  }
-
   static query = {
     video: ['#qr-video', true],
     videoContainer: ['#video-container',true],
@@ -51,7 +47,7 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
 
   setResult(result) {
     if (result.data) {
-      this.on = false;
+      this.stop();
       DOM.fireEvent(this, 'scan', { detail: { data: result.data } });
     }
   }
@@ -82,10 +78,6 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
     });
 
     this.videoContainer.append(this.scanner.$canvas);
-  }
-
-  willUpdate(props) {
-    props.has('on') && this.on ? this.start() : this.stop();
   }
 }
 

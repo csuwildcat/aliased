@@ -132,8 +132,8 @@ export class AppView extends LitElement.with($App, State, Query) {
       </sl-dialog>
 
       <sl-dialog id="qr_scanner_modal" label="Scan QR Code" placement="start" fit-content
-        @sl-show="${() => this.qrScanner.on = true}"
-        @sl-hide="${() => this.qrScanner.on = false}"
+        @sl-show="${() => this.qrScanner.start()}"
+        @sl-hide="${() => this.qrScanner.stop()}"
         >
         <p>Scan a QR code to connect to a DWA.</p>
         <qrcode-scanner id="qr_scanner" @scan="${e => {
