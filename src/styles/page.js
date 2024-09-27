@@ -166,8 +166,12 @@ sl-tab-group::part(tabs) {
   flex: 1;
 }
 
-[flex~="align-start"] {
+[flex~="align-start"], [flex~="start"] {
   align-items: start;
+}
+
+[flex~="end"] {
+  align-items: end;
 }
 
 [flex~="center-x"]:not([flex~="column"]) {

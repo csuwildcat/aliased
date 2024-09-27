@@ -177,7 +177,6 @@ export class ProfileView extends LitElement.with(State, Query) {
       this.socialData = this.social?.cache?.json || this.socialData;
       
       this.careerData = this.career?.cache?.json || this.careerData;
-      console.log(this.careerData);
       this.loadingError = false;
       this.loaded = true;
       DOM.fireEvent(this, 'profile-view-load-success')
@@ -198,7 +197,6 @@ export class ProfileView extends LitElement.with(State, Query) {
   }
 
   async saveSocialInfo(e){
-    console.log(this.social);
     const formData = new FormData(this.profileForm);
     for (const entry of formData.entries()) {
       natives.deepSet(this.socialData, entry[0], entry[1] || undefined);
@@ -275,7 +273,6 @@ export class ProfileView extends LitElement.with(State, Query) {
     const today = new Date();
     const now = today.getTime();
     let latestJob = { startTime: now, endTime: 0 };
-    console.log(this?.careerData?.jobs?.length);
     const sortedJobs = this?.careerData?.jobs?.reduce((obj, job) => {
       const employer = job?.employer?.trim().toLowerCase() || '';
       (obj[employer] = obj[employer] || []).push(job)

@@ -1,48 +1,20 @@
 import { LitElement, css, html } from 'lit';
-import { State, Query, Spinner } from '../components/mixins';
+import '../components/shoelace';
+import { Query, Spinner } from '../components/mixins';
 import { DOM } from '../utils/dom.js';
+import { notify } from '../utils/notifications.js';
 import QrScanner from 'qr-scanner' ;
 
-export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
-  static styles = css`
-    :host {
-      display: block;
-    }
-  `;
+
+import PageStyles from '../styles/page.js';
+
+export class QRCodeScanner extends LitElement.with(Query, Spinner){
 
   static query = {
-    video: ['#qr-video', true],
-    videoContainer: ['#video-container',true],
-    camList: ['#cam-list', true],
-    fileSelector: ['#file-selector', true],
-  }
-
-  constructor() {
-    super()
-  }
-
-  render() {
-    return html`
-      <div id="video-container">
-        <video id="qr-video"></video>
-      </div>
-      <div>
-        <b>Select Camera:</b>
-        <select id="cam-list" @change="${ e => this.scanner.setCamera(e.target.value) }">
-          <option value="environment" selected>Environment Facing (default)</option>
-          <option value="user">User Facing</option>
-        </select>
-      </div>
-
-      <h1>Scan from File:</h1>
-      <input type="file" id="file-selector" @change="${ e => {
-        const file = this.files[0];
-        if (file) {
-          QrScanner.scanImage(file, { returnDetailedScanResult: true })
-            .then(result => this.setResult(result));
-        }
-      }}">
-    `;
+    video: ['#qr_video', true],
+    videoContainer: ['#video_container',true],
+    camList: ['#cam_list', true],
+    fileInput: ['#file_input', true],
   }
 
   setResult(result) {
@@ -55,8 +27,7 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
   start() {
     QrScanner.hasCamera().then(hasCamera => {
       if (!hasCamera) {
-        //TODO: Alert differently
-        alert('No camera found.');
+        notify.warning('No camera found');
       } else {
         this.scanner.start();
       }
@@ -77,6 +48,72 @@ export class QRCodeScanner extends LitElement.with(State, Query, Spinner){
 
     this.videoContainer.append(this.scanner.$canvas);
   }
+
+  render() {
+    return html`
+      <div id="video_container">
+        <video id="qr_video"></video>
+      </div>
+
+      <div id="options" flex="end">
+
+        <sl-select id="cam_list" value="environment" @sl-change="${ e => this.scanner.setCamera(e.target.value) }">
+          <sl-icon slot="prefix" name="camera"></sl-icon>
+          <sl-option value="environment">Front</sl-option>
+          <sl-option value="user">Selfie</sl-option>
+        </sl-select>
+
+        <sl-button id="file_button" @click="${() => this.fileInput.click()}">
+          <sl-icon slot="prefix" name="upload"></sl-icon>
+          Upload QR
+          <input id="file_input" type="file" slot="suffix" @change="${ e => {
+            const file = this.files[0];
+            if (file) {
+              QrScanner.scanImage(file, { returnDetailedScanResult: true })
+                .then(result => this.setResult(result));
+            }
+          }}">
+        </sl-button>
+
+      </div>
+    `;
+  }
+
+  static styles = [
+    PageStyles,
+    css`
+      :host {
+        display: block;
+      }
+
+      #video_container {
+        width: 100%;                           
+        max-width: clamp(200px, 425px, 42vh);
+        aspect-ratio: 1 / 1; 
+        margin: 0 auto 1rem; 
+        box-sizing: border-box;
+      }
+
+      #video_container canvas {
+        height: 100%;
+        width: 100%;
+        border-radius: 4px;
+      }
+
+      #options {
+        gap: 0 1rem;
+      }
+
+      #file_button {
+        margin-left: auto;
+      }
+
+      #file_input {
+        display: none;
+      }
+    `
+  ];
+
 }
 
-customElements.define("qrcode-scanner", QRCodeScanner);
+customElements.define('qrcode-scanner', QRCodeScanner);
