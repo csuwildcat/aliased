@@ -10852,7 +10852,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     `]}customElements.define("create-identity",CreateIdentity);class IdentitiesPage extends h$2.with(State,Query,Spinner){static properties={ready:{store:"page"},identities:{store:"page"},identityEndpointUpdate:{type:Object}};static query={createIdentityButton:"#create_identity_button",createIdentityModal:["#create_identity_modal",!0],restoreIdentityButton:"#restore_identity_button",modifyEndpointsModal:["#modify_endpoints_modal",!0]};constructor(){super(),this.lastIdentityLabelSave=Date.now(),this.profileProtocolEncoded=Convert.string(profile.uri).toBase64Url()}firstUpdated(){this.ready.state||this.startSpinner({target:"section",minimum:500,renderImmediate:!0}),this.ready.then(()=>{this.stopSpinner()})}toggleIdentityDetails(At){const xt=At.currentTarget,Bt=xt.closest("li").querySelector("detail-box");Bt.toggle(),xt.firstElementChild.name=Bt.open?"chevron-up":"chevron-down"}generateEndpointItems(At,xt,Bt){return(At.did.document.service||[]).reduce((Nt,jt)=>{if(!Nt&&jt.type==="DecentralizedWebNode"){let Ut=jt.serviceEndpoint||[];Ut=Array.isArray(Ut)?Ut:[Ut],Bt&&(Ut=this.identityEndpointUpdate.endpoints=this.identityEndpointUpdate.endpoints||[...Ut]),Nt=xt(Ut,At)}return Nt},null)}openEndpointModal(At){(!this.identityEndpointUpdate||this.identityEndpointUpdate.identity!==At)&&(this.identityEndpointUpdate={identity:At}),this.modifyEndpointsModal.show()}closeEndpointModal(){this.modifyEndpointsModal.hide()}async updateEndpoints(At){if(!this.identityEndpointUpdate)return;const{identity:xt,endpoints:Bt}=this.identityEndpointUpdate;console.log(Bt);try{const Nt=await DWeb.did.update(xt,jt=>{const Ut=jt.service.find(Lt=>Lt.type==="DecentralizedWebNode");Ut&&(Ut.serviceEndpoint=Bt.reduce((Lt,Ht)=>(Ht=Ht.trim(),Ht.length&&Lt.push(Ht),Lt),[])),Ut.serviceEndpoint=Bt});return At&&this.closeEndpointModal(),Nt}catch{}}async saveIdentityLabel(At,xt){var jt,Ut,Lt;console.log(At);let Bt=At.target.value.trim().toLowerCase(),Nt=((Lt=(Ut=(jt=xt.connectRecord)==null?void 0:jt.cache)==null?void 0:Ut.json)==null?void 0:Lt.label)||"";Bt&&Bt!==Nt&&Date.now()>this.lastIdentityLabelSave+2e3&&(this.lastIdentityLabelSave=Date.now(),await App$1.saveIdentityLabel(xt,Bt).then(Ht=>notify.success("Your profile info was saved")).catch(Ht=>{Ht.target.value=Nt,notify.error("There was an error saving your new label for this identity")}))}render(){var xt;const At=Object.values(this.identities||{});return ke$2`
       <section page-section>
         ${At!=null&&At.length?ke$2`
-            <h2>Identities</h2>
+            <h2 flex>
+              Identities
+
+              <sl-dropdown id="identity_actions">
+                <sl-button size="small" slot="trigger" caret>Actions</sl-button>
+                <sl-menu>
+                  <sl-menu-item @click="${Bt=>this.createIdentityModal.show()}">
+                    <sl-icon slot="prefix" name="person-plus"></sl-icon> Create an Identity
+                  </sl-menu-item>
+                  <sl-menu-item @click="${Bt=>App$1.restoreIdentityModal.show()}">
+                    <sl-icon slot="prefix" name="person-up"></sl-icon> Restore an Identity
+                  </sl-menu-item>
+                  <sl-menu-item @click="${Bt=>App$1.qrScannerModal.show()}">
+                    <sl-icon slot="prefix" name="window-stack"></sl-icon> Connect an App
+                  </sl-menu-item>
+                </sl-menu>
+              </sl-dropdown>
+
+            </h2>
             <ul id="identity_list" limit-width>
               ${At.map(Bt=>{var jt,Ut,Lt;const Nt=Bt.connectedDid;return ke$2`
                 <li>
@@ -10894,7 +10912,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 </li>
               `})}
             </ul>
-            <div id="create_restore_buttons" flex="center-x center-y">
+            <!-- <div id="create_restore_buttons" flex="center-x center-y">
               <sl-button id="create_identity_button" variant="success" size="small" @click="${Bt=>this.createIdentityModal.show()}">
                 <sl-icon slot="prefix" name="person-plus"></sl-icon> Create an Identity
               </sl-button>
@@ -10904,7 +10922,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <sl-button id="restore_identity_button" variant="primary" size="small" @click="${Bt=>App$1.qrScannerModal.show()}">
                 <sl-icon slot="prefix" name="window-stack"></sl-icon> Connect an App
               </sl-button>
-            </div>
+            </div> -->
           `:ke$2`
             <connect-widget></connect-widget>
           `}
@@ -10947,6 +10965,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     `}static styles=[PageStyles,SpinnerStyles,i$7`
       :host > section {
         
+      }
+
+      #identity_actions {
+        margin-left: auto;
       }
 
       connect-widget {
