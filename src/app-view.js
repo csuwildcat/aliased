@@ -1,5 +1,10 @@
 import { LitElement, css, html } from 'lit'
 
+import '@vaadin/app-layout';
+import '@vaadin/side-nav';
+import '@vaadin/scroller';
+import '@vaadin/upload';
+
 import './components/pwa-badge'
 import './components/shoelace';
 import './components/connect-widget';
@@ -23,8 +28,9 @@ import { Oidc } from '@web5/agent';
 export class AppView extends LitElement.with($App, State, Query) {
 
   static query = {
+    appLayout: ['#app_layout', true],
     connectModal: ['#connect_modal', true],
-    nav: ['#nav', true],
+    // nav: ['#nav', true],
     pages: ['#pages', true],
     connectPage: ['#connect', true],
     connectRequestModal: ['#connect_request_modal', true],
@@ -44,7 +50,7 @@ export class AppView extends LitElement.with($App, State, Query) {
 
     this.router = globalThis.router = new AppRouter(this, {
       onRouteChange: async (route, path) => {
-        this?.nav?.removeAttribute('open');
+        if (this.appLayout) this.appLayout.drawerOpened = false;
       },
       routes: [
         {
@@ -98,13 +104,14 @@ export class AppView extends LitElement.with($App, State, Query) {
   render() {
     return html`
 
-      <header id="header">
-        <sl-icon id="nav_toggle" name="list" @click="${e => this.nav?.toggleAttribute('open')}"></sl-icon>
-        <sl-icon id="logo_icon" name="app-logo"></sl-icon>
-        <h1>Aliased</h1>
-      </header>
 
-      <nav id="nav" @click="${e => this.nav?.removeAttribute('open')}">
+    <vaadin-app-layout id="app_layout">
+
+      <sl-icon slot="navbar" id="nav_toggle" name="list" @click="${e => this.appLayout.drawerOpened = true}"></sl-icon>
+      <sl-icon slot="navbar" id="logo_icon" name="app-logo"></sl-icon>
+      <h1 slot="navbar">Aliased</h1>
+
+      <nav id="nav" slot="drawer" @click="${e => this.nav?.removeAttribute('open')}">
         <a href="/" ?active="${location.pathname === '/'}">
           <sl-icon slot="prefix" name="people"></sl-icon>
           My IDs
@@ -115,11 +122,15 @@ export class AppView extends LitElement.with($App, State, Query) {
         </a>
       </nav>
 
-      <main id="pages">
-        <find-page id="find" page="full-width"></find-page>
-        <identities-page id="identities" page></identities-page>
-        <connect-page id="connect" page></connect-page>
-      </main>
+      <find-page id="find" page="full-width"></find-page>
+      <identities-page id="identities" page></identities-page>
+      <connect-page id="connect" page></connect-page>
+
+    </vaadin-app-layout>
+
+
+
+
 
       <sl-dialog id="connect_modal" label="Connect" placement="start" fit-content ?open="${this?.connectModal?.open && this.identity && false}">
         <connect-widget></connect-widget>
@@ -167,22 +178,28 @@ export class AppView extends LitElement.with($App, State, Query) {
     css`
       :host {
         --header-height: 3rem;
+        --_vaadin-app-layout-navbar-offset-size: var(--header-height);
         --nav-width: 4.5rem;
+        --_vaadin-app-layout-drawer-offset-size: var(--nav-width);
         --content-height: calc(100vh - var(--header-height));
         --page-padding: 3rem 2.25rem;
       }
 
-      #header {
-        position: sticky;
-        top: 0;
+      #app_layout {
+        --vaadin-app-layout-drawer-width: 4rem;
+      }
+
+      #app_layout::part(navbar){
+        /* position: sticky;
+        top: 0; */
         display: flex;
         align-items: center;
         height: var(--header-height);
+        min-height: var(--header-height);
         padding: 0 0.65rem;
         background: #17456d;
         box-shadow: 0 0 2px 1px rgba(0 0 0 / 25%);
         user-select: none;
-        z-index: 2;
       }
 
       #nav_toggle {
@@ -205,14 +222,14 @@ export class AppView extends LitElement.with($App, State, Query) {
         font-size: 1.75rem;
       }
 
-      #header h1 {
+      #app_layout > h1 {
         margin: 0 auto -0.1rem 0.2rem;
         font-family: var(--app-font);
         font-size: 1.75rem;
         font-weight: normal
       }
 
-      #header sl-avatar {
+      #app_layout > sl-avatar {
         --size: calc(var(--header-height) - 1rem);
       }
 
@@ -220,40 +237,16 @@ export class AppView extends LitElement.with($App, State, Query) {
         z-index: 3;
       } 
 
-      #nav {
-        position: fixed;
+      #app_layout::part(drawer) {
+        /* position: fixed;
         bottom: 0;
         box-sizing: border-box;
         height: var(--content-height);
-        width: var(--nav-width);
+        width: var(--nav-width); */
         padding: 0.6rem 0;
         background: var(--grey);
         border-right: 1px solid rgba(0 0 0 / 60%);
-        text-align: center;
-        transition: transform 0.3s ease;
-        z-index: 1;
       }
-
-        #nav:before {
-          content: " ";
-          position: fixed;
-          top: 0;
-          left: 100%;
-          width: 100vw;
-          height: 100vh;
-          background: rgba(0, 0, 0, 0.5);
-          box-shadow: 2px 0 2px 1px rgba(0 0 0 / 25%);
-          opacity: 0;
-          visibility: hidden;
-          pointer-events: none;
-          transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        #nav[open]:before { 
-          opacity: 1;
-          visibility: visible;
-          pointer-events: auto;
-        }
 
       #nav a {
         display: flex;
@@ -300,12 +293,11 @@ export class AppView extends LitElement.with($App, State, Query) {
         color: currentColor;
       }
 
-      #pages {
-        position: relative;
-        margin: 0 0 0 var(--nav-width);
+      #app_layout::part(backdrop) {
+        background-color: rgba(0 0 0 / 50%);
       }
 
-      #pages > * {
+      #app_layout [page] {
         display: block;
         position: absolute;
         top: 0;
@@ -320,8 +312,7 @@ export class AppView extends LitElement.with($App, State, Query) {
         z-index: -1;
       }
 
-      #pages > [route-state="active"] {
-        position: relative;
+      #app_layout [page][route-state="active"] {
         height: auto;
         min-height: var(--content-height);
         opacity: 1;
@@ -351,7 +342,12 @@ export class AppView extends LitElement.with($App, State, Query) {
       }
 
       @media(max-width: 800px) {
-        #nav {
+
+        #app_layout {
+          --vaadin-app-layout-drawer-width: 300px;
+        }
+
+        /* #nav {
           top: var(--header-height);
           width: 150px;
           transform: translateX(-100%);
@@ -359,7 +355,7 @@ export class AppView extends LitElement.with($App, State, Query) {
         }
         #nav[open] {
           transform: translateX(0);
-        }
+        } */
         #nav a {
           flex-direction: row;
           justify-content: left;

@@ -118,6 +118,7 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
         top: var(--header-height);
         height: 3.5rem;
         box-sizing: border-box;
+        margin: 0 0 2.5rem;
         padding: 0.2rem 0.8rem 0;
         border-bottom: 1px solid rgba(255 255 255 / 1%);
         box-shadow: 0 2px 1px -1px rgba(0 0 0 / 40%);

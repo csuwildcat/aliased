@@ -11,7 +11,11 @@
   "dependencies": {
     "@lit-labs/router": "0.1.3",
     "@shoelace-style/shoelace": "2.16.0",
-    "@vaadin/upload": "24.4.6",
+    "@vaadin/app-layout": "24.4.10",
+    "@vaadin/scroller": "24.4.10",
+    "@vaadin/side-nav": "24.4.10",
+    "@vaadin/icon": "24.4.10",
+    "@vaadin/upload": "24.4.10",
     "@web5/agent": "0.7.3",
     "@web5/api": "0.0.0-next-b97dace-20240912134256",
     "@web5/common": "^1.0.2",

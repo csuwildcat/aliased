@@ -5,7 +5,6 @@ import { App } from '../app.js';
 import * as protocols from '../utils/protocols.js';
 
 import '../components/shoelace.js';
-import '@vaadin/upload';
 
 import '../components/create-identity';
 import '../components/detail-box.js';
