@@ -122,7 +122,25 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
             <connect-widget></connect-widget>
           ` : 
           html`
-            <h2>Identities</h2>
+            <h2 flex>
+              Identities
+
+              <sl-dropdown id="identity_actions">
+                <sl-button size="small" slot="trigger" caret>Actions</sl-button>
+                <sl-menu>
+                  <sl-menu-item @click="${ e => this.createIdentityModal.show() }">
+                    <sl-icon slot="prefix" name="person-plus"></sl-icon> Create an Identity
+                  </sl-menu-item>
+                  <sl-menu-item @click="${ e => App.restoreIdentityModal.show() }">
+                    <sl-icon slot="prefix" name="person-up"></sl-icon> Restore an Identity
+                  </sl-menu-item>
+                  <sl-menu-item @click="${ e => App.qrScannerModal.show()}">
+                    <sl-icon slot="prefix" name="window-stack"></sl-icon> Connect an App
+                  </sl-menu-item>
+                </sl-menu>
+              </sl-dropdown>
+
+            </h2>
             <ul id="identity_list" limit-width>
               ${identities.map(identity => {
                 const did = identity.connectedDid;
@@ -166,7 +184,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
                 </li>
               `})}
             </ul>
-            <div id="create_restore_buttons" flex="center-x center-y">
+            <!-- <div id="create_restore_buttons" flex="center-x center-y">
               <sl-button id="create_identity_button" variant="success" size="small" @click="${ e => this.createIdentityModal.show() }">
                 <sl-icon slot="prefix" name="person-plus"></sl-icon> Create an Identity
               </sl-button>
@@ -176,7 +194,7 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
               <sl-button id="restore_identity_button" variant="primary" size="small" @click="${ e => App.qrScannerModal.show()}">
                 <sl-icon slot="prefix" name="window-stack"></sl-icon> Connect an App
               </sl-button>
-            </div>
+            </div> -->
           `
         }
       </section>
@@ -242,6 +260,10 @@ export class IdentitiesPage extends LitElement.with(State, Query, Spinner) {
     css`
       :host > section {
         
+      }
+
+      #identity_actions {
+        margin-left: auto;
       }
 
       connect-widget {
