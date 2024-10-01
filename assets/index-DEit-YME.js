@@ -11790,7 +11790,7 @@ sl-tab-group::part(tabs) {
       @media(max-width: 800px) {
 
       }
-    `]}customElements.define("identities-page",IdentitiesPage);activatePolyfills();class AppView extends h$2.with($App,State,Query){static query={appLayout:["#app_layout",!0],connectModal:["#connect_modal",!0],pages:["#pages",!0],connectPage:["#connect",!0],connectRequestModal:["#connect_request_modal",!0],pinModal:["#pin_modal",!0],pinModalContent:["#pin_modal_content",!0],profilePage:["#profile",!0],directoryPage:["#directory",!0],identitiesPage:["#identities",!0],restoreIdentityModal:["#restore_identity_modal",!0],restoreUploader:["#restore_uploader",!0],qrScannerModal:["#qr_scanner_modal",!0],qrScanner:["#qr_scanner",!0]};constructor(){super(),this.router=globalThis.router=new AppRouter(this,{onRouteChange:async(At,xt)=>{this.appLayout&&(this.appLayout.drawerOpened=!1)},routes:[{path:"/",component:"#identities"},{path:"/profiles(/)?:did?",component:"#find"},{path:"/dweb-connect(/.*)?",component:"#connect"}]})}async handleWalletConnectFlow(At){const xt=new URL(At.detail.data),Bt=xt.searchParams.get("request_uri"),Nt=xt.searchParams.get("encryption_key"),jt=await Oidc.getAuthRequest(Bt,Nt),Ut=document.createElement("connect-request");Ut.request=jt,Ut.addEventListener("connect-pin",async Lt=>{this.pinModalContent.innerHTML=Lt.detail.pin,this.pinModal.show()}),this.connectRequestModal.appendChild(Ut),this.connectRequestModal.show()}async handleRestoreUpload(At){if(!(!this.restoreUploader||!this.restoreUploader.files.length)){try{const xt=await DWeb$1.identity.restore({from:"file",files:this.restoreUploader.files});xt&&await App.addIdentity(xt),this.restoreIdentityModal.hide()}catch(xt){console.log(xt)}this.restoreUploader.files=[]}}render(){var At;return ke$2`
+    `]}customElements.define("identities-page",IdentitiesPage);activatePolyfills();class AppView extends h$2.with($App,State,Query){static query={appLayout:["#app_layout",!0],connectModal:["#connect_modal",!0],pages:["#pages",!0],connectPage:["#connect",!0],connectRequestModal:["#connect_request_modal",!0],pinModal:["#pin_modal",!0],pinModalContent:["#pin_modal_content",!0],profilePage:["#profile",!0],directoryPage:["#directory",!0],identitiesPage:["#identities",!0],restoreIdentityModal:["#restore_identity_modal",!0],restoreUploader:["#restore_uploader",!0],qrScannerModal:["#qr_scanner_modal",!0],qrScanner:["#qr_scanner",!0]};constructor(){super(),this.router=globalThis.router=new AppRouter(this,{onRouteChange:async(At,xt)=>{this.appLayout&&matchMedia("(max-width: 800px)").matches&&(this.appLayout.drawerOpened=!1)},routes:[{path:"/",component:"#identities"},{path:"/profiles(/)?:did?",component:"#find"},{path:"/dweb-connect(/.*)?",component:"#connect"}]})}async handleWalletConnectFlow(At){const xt=new URL(At.detail.data),Bt=xt.searchParams.get("request_uri"),Nt=xt.searchParams.get("encryption_key"),jt=await Oidc.getAuthRequest(Bt,Nt),Ut=document.createElement("connect-request");Ut.request=jt,Ut.addEventListener("connect-pin",async Lt=>{this.pinModalContent.innerHTML=Lt.detail.pin,this.pinModal.show()}),this.connectRequestModal.appendChild(Ut),this.connectRequestModal.show()}async handleRestoreUpload(At){if(!(!this.restoreUploader||!this.restoreUploader.files.length)){try{const xt=await DWeb$1.identity.restore({from:"file",files:this.restoreUploader.files});xt&&await App.addIdentity(xt),this.restoreIdentityModal.hide()}catch(xt){console.log(xt)}this.restoreUploader.files=[]}}render(){var At;return ke$2`
 
 
     <vaadin-app-layout id="app_layout">
@@ -11861,7 +11861,7 @@ sl-tab-group::part(tabs) {
         --nav-width: 4.5rem;
         --_vaadin-app-layout-drawer-offset-size: var(--nav-width);
         --content-height: calc(100vh - var(--header-height));
-        --page-padding: 3rem 2.25rem;
+        --page-padding: 4rem 2.25rem 3rem;
       }
 
       #app_layout {
@@ -12023,7 +12023,7 @@ sl-tab-group::part(tabs) {
       @media(max-width: 800px) {
 
         #app_layout {
-          --vaadin-app-layout-drawer-width: 300px;
+          --vaadin-app-layout-drawer-width: fit-content;
         }
 
         /* #nav {
@@ -12039,14 +12039,15 @@ sl-tab-group::part(tabs) {
           flex-direction: row;
           justify-content: left;
           height: 3rem;
-          margin: 0.5rem 0 0;
+          margin: 0.25rem 0 0;
           font-size: 1rem;
+          padding: 0 2rem 0 1rem;
         }
         #nav a > :first-child {
           display: flex;
           justify-content: center;
           width: 2rem;
-          margin: 0 0.5rem 0 1rem;
+          margin: 0 0.5rem 0 0;
         }
         #nav sl-avatar {
           --size: 1.55rem;
