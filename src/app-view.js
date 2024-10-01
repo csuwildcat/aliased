@@ -50,7 +50,9 @@ export class AppView extends LitElement.with($App, State, Query) {
 
     this.router = globalThis.router = new AppRouter(this, {
       onRouteChange: async (route, path) => {
-        if (this.appLayout) this.appLayout.drawerOpened = false;
+        if (this.appLayout && matchMedia('(max-width: 800px)').matches) {
+          this.appLayout.drawerOpened = false;
+        }
       },
       routes: [
         {
@@ -182,7 +184,7 @@ export class AppView extends LitElement.with($App, State, Query) {
         --nav-width: 4.5rem;
         --_vaadin-app-layout-drawer-offset-size: var(--nav-width);
         --content-height: calc(100vh - var(--header-height));
-        --page-padding: 3rem 2.25rem;
+        --page-padding: 4rem 2.25rem 3rem;
       }
 
       #app_layout {
@@ -344,7 +346,7 @@ export class AppView extends LitElement.with($App, State, Query) {
       @media(max-width: 800px) {
 
         #app_layout {
-          --vaadin-app-layout-drawer-width: 300px;
+          --vaadin-app-layout-drawer-width: fit-content;
         }
 
         /* #nav {
@@ -360,14 +362,15 @@ export class AppView extends LitElement.with($App, State, Query) {
           flex-direction: row;
           justify-content: left;
           height: 3rem;
-          margin: 0.5rem 0 0;
+          margin: 0.25rem 0 0;
           font-size: 1rem;
+          padding: 0 2rem 0 1rem;
         }
         #nav a > :first-child {
           display: flex;
           justify-content: center;
           width: 2rem;
-          margin: 0 0.5rem 0 1rem;
+          margin: 0 0.5rem 0 0;
         }
         #nav sl-avatar {
           --size: 1.55rem;
