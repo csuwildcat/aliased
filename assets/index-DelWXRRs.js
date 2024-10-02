@@ -11865,7 +11865,7 @@ sl-tab-group::part(tabs) {
       }
 
       #app_layout {
-        --vaadin-app-layout-drawer-width: 4rem;
+        --vaadin-app-layout-drawer-width: var(--nav-width);
       }
 
       #app_layout::part(navbar){
@@ -11981,7 +11981,7 @@ sl-tab-group::part(tabs) {
         position: absolute;
         top: 0;
         box-sizing: border-box;
-        width: 100%;
+        width: calc(100% - var(--nav-width));
         height: var(--content-height);
         padding: var(--page-padding);
         opacity: 0;
