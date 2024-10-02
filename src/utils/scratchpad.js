@@ -40,3 +40,30 @@ async function triggerForm(fields, element = document.body) {
     element.append(iframe);
   });
 }
+
+
+dwn.protocols.register({
+  social: 'URI'
+})
+
+
+dwn.protocols.social.avatar.foo.bar.$set({ data: Blob });
+
+dwn.protocols.social.avatar.$get({ data: Blob });
+
+dwn.protocols.social.avatar.$add({ data: Blob });
+
+const protocol = {
+  
+};
+
+
+const proxy2 = new Proxy(target, {
+  get(target, prop, receiver) {
+    'profile.app' / {}
+
+
+    
+    return "world";
+  },
+});
