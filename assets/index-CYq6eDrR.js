@@ -12052,13 +12052,13 @@ sl-tab-group::part(tabs) {
         #nav sl-avatar {
           --size: 1.55rem;
         }
-        #pages {
-          margin: 0; 
-          overflow: visible;
-        }
 
         #nav_toggle {
           display: unset;
+        }
+
+        #app_layout [page] {
+          width: 100%;
         }
       }
 
