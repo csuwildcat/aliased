@@ -860,6 +860,11 @@ export class ProfileView extends LitElement.with(State, Query) {
         text-align: right;
       }
 
+      .label-on-left::part(form-control-input) {
+        min-width: 0;
+      }
+        
+
       .label-on-left::part(form-control-help-text) {
         grid-column-start: 2;
       }
