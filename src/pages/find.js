@@ -116,10 +116,10 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
       #search_bar {
         position: sticky;
         top: var(--header-height);
-        height: 3.5rem;
+        height: var(--subheader-height);
         box-sizing: border-box;
-        margin: 0 0 2.5rem;
-        padding: 0.2rem 0.8rem 0;
+        margin: 0 0 var(--header-height);
+        padding: 0 0.8rem 0;
         border-bottom: 1px solid rgba(255 255 255 / 1%);
         box-shadow: 0 2px 1px -1px rgba(0 0 0 / 40%);
         background: hsl(240deg 7% 15% / 90%);
