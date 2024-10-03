@@ -9995,10 +9995,6 @@ zoo`.split(`
   z-index: 0 !important;
 } 
 
-:host([page]) > * {
-  margin: 0 auto;
-}
-
 :host([route-state="active"]) {
   z-index: 1;
 }
@@ -10007,10 +10003,15 @@ zoo`.split(`
   opacity: 1;
 }
 
-[page-section] {
+:host([page]) > * {
+  margin: 0 auto;
+}
+
+:host([page]) > section {
   box-sizing: border-box;
   width: 100%;
   max-width: var(--content-max-width);
+  padding: 2.25rem;
 }
 
 h2,h3,h4,h5,h6 {
@@ -10345,6 +10346,10 @@ sl-tab-group::part(tabs) {
 
 @media(max-width: 500px) {
 
+  :host([page~="full-width"]) > section {
+    padding: 0;
+  }
+
   .page-dialog::part(panel) {
     width: 100%;
     height: calc(100% - var(--header-height));
@@ -10352,7 +10357,7 @@ sl-tab-group::part(tabs) {
     max-height: none;
     margin-top: var(--header-height);
     box-shadow: none;
-    border-radius: none;
+    border-radius: 0;
   }
 }
 
@@ -11444,9 +11449,9 @@ sl-tab-group::part(tabs) {
       </section>
     `}static styles=[PageStyles,SpinnerStyles,i$7`
 
-      :host {
+      /* :host {
         padding: 0 !important;
-      }
+      } */
 
       .spinner-mixin {
         z-index: 0;
@@ -11461,7 +11466,6 @@ sl-tab-group::part(tabs) {
         top: var(--header-height);
         height: var(--subheader-height);
         box-sizing: border-box;
-        margin: 0 0 var(--header-height);
         padding: 0 0.8rem 0;
         border-bottom: 1px solid rgba(255 255 255 / 1%);
         box-shadow: 0 2px 1px -1px rgba(0 0 0 / 40%);
@@ -11477,11 +11481,7 @@ sl-tab-group::part(tabs) {
         margin: 0 0.5em 0 0;
         transition: transform 0.4s ease;
       }
-
-      :host > section {
-        padding: var(--page-padding);
-      }
-
+      
       profile-view {
         width: 100%;
         max-width: var(--content-max-width);
@@ -11862,11 +11862,13 @@ sl-tab-group::part(tabs) {
         --nav-width: 4.5rem;
         --_vaadin-app-layout-drawer-offset-size: var(--nav-width);
         --content-height: calc(100vh - var(--header-height));
-        --page-padding: 4rem 2.25rem 3rem;
+        --page-padding: var(--header-height) 0 3rem;
+        height: 100%;
       }
 
       #app_layout {
         --vaadin-app-layout-drawer-width: var(--nav-width);
+        height: 100%;
       }
 
       #app_layout::part(navbar){
@@ -11994,8 +11996,9 @@ sl-tab-group::part(tabs) {
         position: absolute;
         top: 0;
         box-sizing: border-box;
-        width: calc(100% - var(--nav-width));
         height: var(--content-height);
+        min-height: 100%;
+        width: calc(100% - var(--nav-width));
         padding: var(--page-padding);
         opacity: 0;
         visibility: hidden;
@@ -12006,7 +12009,6 @@ sl-tab-group::part(tabs) {
 
       #app_layout [page][route-state="active"] {
         height: auto;
-        min-height: var(--content-height);
         opacity: 1;
         z-index: 0;
         visibility: visible;
@@ -12044,16 +12046,7 @@ sl-tab-group::part(tabs) {
         #app_layout {
           --vaadin-app-layout-drawer-width: fit-content;
         }
-
-        /* #nav {
-          top: var(--header-height);
-          width: 150px;
-          transform: translateX(-100%);
-          z-index: 1;
-        }
-        #nav[open] {
-          transform: translateX(0);
-        } */
+        
         #nav a {
           flex-direction: row;
           justify-content: left;
