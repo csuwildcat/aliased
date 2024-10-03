@@ -311,7 +311,7 @@ export class AppView extends LitElement.with($App, State, Query) {
       }
 
       #app_layout::part(backdrop) {
-        background-color: rgba(0 0 0 / 50%);
+        background-color: rgba(0 0 0 / 75%);
       }
 
       #app_layout [page] {
