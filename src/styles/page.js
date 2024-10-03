@@ -22,7 +22,7 @@ export default css`
   box-sizing: border-box;
   width: 100%;
   max-width: var(--content-max-width);
-  padding: 2.25rem;
+  padding: 2.75rem 2.25rem;
 }
 
 h2,h3,h4,h5,h6 {
@@ -358,7 +358,7 @@ sl-tab-group::part(tabs) {
 @media(max-width: 500px) {
 
   :host([page]) > section {
-    padding: 1.25rem;
+    padding: 1.5rem 1.25rem;
   }
 
   :host([page~="full-width"]) > section {
