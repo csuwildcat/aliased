@@ -11459,10 +11459,10 @@ sl-tab-group::part(tabs) {
       #search_bar {
         position: sticky;
         top: var(--header-height);
-        height: 3.5rem;
+        height: var(--subheader-height);
         box-sizing: border-box;
-        margin: 0 0 2.5rem;
-        padding: 0.2rem 0.8rem 0;
+        margin: 0 0 var(--header-height);
+        padding: 0 0.8rem 0;
         border-bottom: 1px solid rgba(255 255 255 / 1%);
         box-shadow: 0 2px 1px -1px rgba(0 0 0 / 40%);
         background: hsl(240deg 7% 15% / 90%);
@@ -11794,7 +11794,7 @@ sl-tab-group::part(tabs) {
 
 
     <vaadin-app-layout id="app_layout">
-
+      
       <sl-icon slot="navbar" id="nav_toggle" name="list" @click="${xt=>this.appLayout.drawerOpened=!0}"></sl-icon>
       <sl-icon slot="navbar" id="logo_icon" name="app-logo"></sl-icon>
       <h1 slot="navbar">Aliased</h1>
@@ -11809,16 +11809,16 @@ sl-tab-group::part(tabs) {
           Find
         </a>
       </nav>
+      <sl-button id="drawer_close_button" slot="drawer" variant="text" @click="${xt=>this.appLayout.drawerOpened=!1}">
+        <sl-icon slot="prefix" name="x-lg" ></sl-icon>
+      </sl-button>
+      
 
       <find-page id="find" page="full-width"></find-page>
       <identities-page id="identities" page></identities-page>
       <connect-page id="connect" page></connect-page>
 
     </vaadin-app-layout>
-
-
-
-
 
       <sl-dialog id="connect_modal" label="Connect" placement="start" fit-content ?open="${((At=this==null?void 0:this.connectModal)==null?void 0:At.open)&&this.identity&&!1}">
         <connect-widget></connect-widget>
@@ -11857,6 +11857,7 @@ sl-tab-group::part(tabs) {
     `}static styles=[PageStyles,i$7`
       :host {
         --header-height: 3rem;
+        --subheader-height: 3.5rem;
         --_vaadin-app-layout-navbar-offset-size: var(--header-height);
         --nav-width: 4.5rem;
         --_vaadin-app-layout-drawer-offset-size: var(--nav-width);
@@ -11917,14 +11918,26 @@ sl-tab-group::part(tabs) {
       } 
 
       #app_layout::part(drawer) {
-        /* position: fixed;
-        bottom: 0;
-        box-sizing: border-box;
-        height: var(--content-height);
-        width: var(--nav-width); */
+        overflow: visible;
         padding: 0.6rem 0;
         background: var(--grey);
         border-right: 1px solid rgba(0 0 0 / 60%);
+      }
+
+      #drawer_close_button {
+        position: absolute;
+        top: 50%;
+        right: -3.5rem;
+        stroke: red;
+        opacity: 0;
+        transform: translateY(-50%);
+        transition: opacity 0.2s ease;
+        background: rgba(255 255 255 / 7%);
+        border-radius: 100%;
+      }
+
+      [drawer-opened] #drawer_close_button {
+        opacity: 1;
       }
 
       #nav a {
