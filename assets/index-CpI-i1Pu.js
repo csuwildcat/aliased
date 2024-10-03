@@ -10346,6 +10346,10 @@ sl-tab-group::part(tabs) {
 
 @media(max-width: 500px) {
 
+  :host([page]) > section {
+    padding: 1.25rem;
+  }
+
   :host([page~="full-width"]) > section {
     padding: 0;
   }
