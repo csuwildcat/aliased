@@ -6,10 +6,6 @@ export default css`
   z-index: 0 !important;
 } 
 
-:host([page]) > * {
-  margin: 0 auto;
-}
-
 :host([route-state="active"]) {
   z-index: 1;
 }
@@ -18,10 +14,15 @@ export default css`
   opacity: 1;
 }
 
-[page-section] {
+:host([page]) > * {
+  margin: 0 auto;
+}
+
+:host([page]) > section {
   box-sizing: border-box;
   width: 100%;
   max-width: var(--content-max-width);
+  padding: 2.25rem;
 }
 
 h2,h3,h4,h5,h6 {
@@ -356,6 +357,10 @@ sl-tab-group::part(tabs) {
 
 @media(max-width: 500px) {
 
+  :host([page~="full-width"]) > section {
+    padding: 0;
+  }
+
   .page-dialog::part(panel) {
     width: 100%;
     height: calc(100% - var(--header-height));
@@ -363,7 +368,7 @@ sl-tab-group::part(tabs) {
     max-height: none;
     margin-top: var(--header-height);
     box-shadow: none;
-    border-radius: none;
+    border-radius: 0;
   }
 }
 

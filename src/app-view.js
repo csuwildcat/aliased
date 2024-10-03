@@ -185,11 +185,13 @@ export class AppView extends LitElement.with($App, State, Query) {
         --nav-width: 4.5rem;
         --_vaadin-app-layout-drawer-offset-size: var(--nav-width);
         --content-height: calc(100vh - var(--header-height));
-        --page-padding: 4rem 2.25rem 3rem;
+        --page-padding: var(--header-height) 0 3rem;
+        height: 100%;
       }
 
       #app_layout {
         --vaadin-app-layout-drawer-width: var(--nav-width);
+        height: 100%;
       }
 
       #app_layout::part(navbar){
@@ -317,8 +319,9 @@ export class AppView extends LitElement.with($App, State, Query) {
         position: absolute;
         top: 0;
         box-sizing: border-box;
-        width: calc(100% - var(--nav-width));
         height: var(--content-height);
+        min-height: 100%;
+        width: calc(100% - var(--nav-width));
         padding: var(--page-padding);
         opacity: 0;
         visibility: hidden;
@@ -329,7 +332,6 @@ export class AppView extends LitElement.with($App, State, Query) {
 
       #app_layout [page][route-state="active"] {
         height: auto;
-        min-height: var(--content-height);
         opacity: 1;
         z-index: 0;
         visibility: visible;
@@ -367,16 +369,7 @@ export class AppView extends LitElement.with($App, State, Query) {
         #app_layout {
           --vaadin-app-layout-drawer-width: fit-content;
         }
-
-        /* #nav {
-          top: var(--header-height);
-          width: 150px;
-          transform: translateX(-100%);
-          z-index: 1;
-        }
-        #nav[open] {
-          transform: translateX(0);
-        } */
+        
         #nav a {
           flex-direction: row;
           justify-content: left;

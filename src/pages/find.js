@@ -101,9 +101,9 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
     SpinnerStyles,
     css`
 
-      :host {
+      /* :host {
         padding: 0 !important;
-      }
+      } */
 
       .spinner-mixin {
         z-index: 0;
@@ -118,7 +118,6 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
         top: var(--header-height);
         height: var(--subheader-height);
         box-sizing: border-box;
-        margin: 0 0 var(--header-height);
         padding: 0 0.8rem 0;
         border-bottom: 1px solid rgba(255 255 255 / 1%);
         box-shadow: 0 2px 1px -1px rgba(0 0 0 / 40%);
@@ -134,11 +133,7 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
         margin: 0 0.5em 0 0;
         transition: transform 0.4s ease;
       }
-
-      :host > section {
-        padding: var(--page-padding);
-      }
-
+      
       profile-view {
         width: 100%;
         max-width: var(--content-max-width);
