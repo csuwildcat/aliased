@@ -12033,6 +12033,12 @@ sl-tab-group::part(tabs) {
         cursor: pointer;
       }
 
+      @media(min-width: 800px) {
+        #drawer_close_button {
+          display: none;
+        }
+      }
+
       @media(max-width: 800px) {
 
         #app_layout {
