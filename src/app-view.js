@@ -19,11 +19,14 @@ import { DWeb } from './utils/dweb';
 import { activatePolyfills } from '@web5/api';
 activatePolyfills();
 
+import { DOM } from './utils/dom.js';
+
 import './pages/connect';
 import './pages/find';
 import './pages/identities';
 import PageStyles from './styles/page';
 import { Oidc } from '@web5/agent';
+
 
 export class AppView extends LitElement.with($App, State, Query) {
 
@@ -68,6 +71,14 @@ export class AppView extends LitElement.with($App, State, Query) {
           component: '#connect'
         },
       ]
+    });
+
+    DOM.addEventDelegate('sl-show', 'sl-dialog', (e, target) => {
+      document.documentElement.setAttribute('overlay-active', '');
+    });
+
+    DOM.addEventDelegate('sl-hide', 'sl-dialog', (e, target) => {
+      document.documentElement.removeAttribute('overlay-active');
     });
   }
 
@@ -123,7 +134,7 @@ export class AppView extends LitElement.with($App, State, Query) {
           Find
         </a>
       </nav>
-      <sl-button id="drawer_close_button" slot="drawer" variant="text" @click="${e => this.appLayout.drawerOpened = false}">
+      <sl-button id="drawer_close_button" variant="text" @click="${e => this.appLayout.drawerOpened = false}">
         <sl-icon slot="prefix" name="x-lg" ></sl-icon>
       </sl-button>
       
@@ -250,19 +261,21 @@ export class AppView extends LitElement.with($App, State, Query) {
       }
 
       #drawer_close_button {
-        position: absolute;
-        top: 50%;
-        right: -3.5rem;
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
         stroke: red;
         opacity: 0;
-        transform: translateY(-50%);
         transition: opacity 0.2s ease;
         background: rgba(255 255 255 / 7%);
         border-radius: 100%;
+        pointer-events: none;
+        z-index: 2;
       }
 
       [drawer-opened] #drawer_close_button {
         opacity: 1;
+        pointer-events: all;
       }
 
       #nav a {
@@ -367,7 +380,7 @@ export class AppView extends LitElement.with($App, State, Query) {
       @media(max-width: 800px) {
 
         #app_layout {
-          --vaadin-app-layout-drawer-width: fit-content;
+          --vaadin-app-layout-drawer-width: 200px;
         }
         
         #nav a {

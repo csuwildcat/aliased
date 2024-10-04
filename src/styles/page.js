@@ -2,8 +2,13 @@ import { css } from 'lit'
 
 export default css`
 
-:host-context(html.sl-scroll-lock) [lock-on-scroll] {
-  z-index: 0 !important;
+[hide-on-overlay] {
+  transition: opacity 0.3s ease;
+} 
+
+:host-context(html[overlay-active]) [hide-on-overlay] {
+  opacity: 0;
+  pointer-events: none;
 } 
 
 :host([route-state="active"]) {

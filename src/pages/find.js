@@ -69,7 +69,7 @@ export class FindPage extends LitElement.with(State, Query, Spinner) {
 
   render() {
     return html`
-      <header id="search_bar" flex="center-y center-x" lock-on-scroll>
+      <header id="search_bar" flex="center-y center-x" hide-on-overlay>
         <sl-input id="search_input"
                   clearable
                   value="${ifDefined(this.did)}"
